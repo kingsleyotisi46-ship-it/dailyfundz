@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Buy Account - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="buy-account-page">
+    <div class="container">
+        <div class="buy-card">
+            <div class="buy-header">
+                <h1><i class="fas fa-shopping-cart"></i> Confirm Purchase</h1>
+            </div>
+            
+            <div class="account-details">
+                <div class="platform-info">
+                    <span class="platform-badge platform-{{ listing.platform }}">
+                        {% if listing.platform == 'facebook' %}
+                        <i class="fab fa-facebook"></i> Facebook
+                        {% elif listing.platform == 'instagram' %}
+                        <i class="fab fa-instagram"></i> Instagram
+                        {% elif listing.platform == 'tiktok' %}
+                        <i class="fab fa-tiktok"></i> TikTok
+                        {% else %}
+                        <i class="fas fa-globe"></i> {{ listing.get_platform_display }}
+                        {% endif %}
+                    </span>
+                    <span class="country">{{ listing.countries }}</span>
+                </div>
+                
+                <h2 class="account-title">{{ listing.title }}</h2>
+                <p class="account-description">{{ listing.description|linebreaksbr }}</p>
+                
+                <div class="account-url">
+                    <i class="fas fa-link"></i>
+                    <a href="{{ listing.account_url }}" target="_blank">{{ listing.account_url }}</a>
+                </div>
+            </div>
+            
+            <div class="purchase-summary">
+                <div class="summary-row">
+                    <span>Account Price</span>
+                    <span class="price">₦{{ listing.price_ngn|intcomma }}</span>
+                </div>
+                <div class="summary-row balance">
+                    <span>Your Balance</span>
+                    <span class="{% if wallet_balance >= listing.price_ngn %}text-success{% else %}text-danger{% endif %}">
+                        ₦{{ wallet_balance|intcomma }}
+                    </span>
+                </div>
+                {% if wallet_balance < listing.price_ngn %}
+                <div class="insufficient-notice">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Insufficient balance. Please <a href="{% url 'add_funds' %}">add funds</a> first.
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="purchase-actions">
+                {% if wallet_balance >= listing.price_ngn %}
+                <form action="{% url 'buy_account' listing.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success btn-lg btn-block">
+                        <i class="fas fa-check"></i> Confirm Purchase - ₦{{ listing.price_ngn|intcomma }}
+                    </button>
+                </form>
+                {% else %}
+                <a href="{% url 'add_funds' %}" class="btn btn-primary btn-lg btn-block">
+                    <i class="fas fa-plus"></i> Add Funds
+                </a>
+                {% endif %}
+                <a href="{% url 'accounts_market' %}" class="btn btn-outline btn-lg btn-block">
+                    <i class="fas fa-arrow-left"></i> Back to Market
+                </a>
+            </div>
+            
+            <div class="purchase-note">
+                <i class="fas fa-info-circle"></i>
+                <p>After purchase, you'll receive login details from our support team. This usually takes 1-24 hours.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.buy-account-page {
+    min-height: 100vh;
+    background: var(--dark);
+    padding: 40px 20px;
+}
+
+.buy-card {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--gray-900);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--gray-800);
+}
+
+.buy-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    padding: 25px;
+    text-align: center;
+}
+
+.buy-header h1 {
+    color: var(--light);
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.account-details {
+    padding: 25px;
+    border-bottom: 1px solid var(--gray-800);
+}
+
+.platform-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.platform-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.platform-facebook { color: #1877f2; }
+.platform-instagram { color: #e4405f; }
+.platform-tiktok { color: #00f2ea; }
+
+.country {
+    background: var(--gray-800);
+    padding: 5px 15px;
+    border-radius: 20px;
+    color: var(--gray-300);
+    font-size: 0.9rem;
+}
+
+.account-title {
+    color: var(--light);
+    font-size: 1.2rem;
+    margin-bottom: 15px;
+}
+
+.account-description {
+    color: var(--gray-400);
+    line-height: 1.7;
+    margin-bottom: 20px;
+}
+
+.account-url {
+    background: var(--gray-800);
+    padding: 12px 15px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.account-url i {
+    color: var(--primary);
+}
+
+.account-url a {
+    color: var(--gray-300);
+    word-break: break-all;
+}
+
+.purchase-summary {
+    padding: 25px;
+    border-bottom: 1px solid var(--gray-800);
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    color: var(--gray-300);
+}
+
+.summary-row.balance {
+    border-top: 1px solid var(--gray-800);
+    margin-top: 10px;
+    padding-top: 15px;
+}
+
+.summary-row .price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+
+.insufficient-notice {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid var(--danger);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    margin-top: 15px;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.insufficient-notice a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.purchase-actions {
+    padding: 25px;
+}
+
+.purchase-actions .btn {
+    margin-bottom: 10px;
+}
+
+.purchase-note {
+    background: var(--gray-800);
+    padding: 20px 25px;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
+}
+
+.purchase-note i {
+    color: var(--primary);
+    font-size: 1.2rem;
+    margin-top: 3px;
+}
+
+.purchase-note p {
+    color: var(--gray-400);
+    margin: 0;
+    line-height: 1.6;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Transaction History - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="transactions-page">
+    <div class="page-header">
+        <div class="container">
+            <h1>📊 Transaction History</h1>
+            <p>View all your deposits, purchases, and refunds</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="transactions-card">
+            {% if transactions %}
+            <div class="transactions-list">
+                {% for txn in transactions %}
+                <div class="transaction-item {{ txn.transaction_type }}">
+                    <div class="txn-icon">
+                        {% if txn.transaction_type == 'deposit' %}
+                        <i class="fas fa-plus-circle"></i>
+                        {% elif txn.transaction_type == 'purchase' %}
+                        <i class="fas fa-shopping-cart"></i>
+                        {% elif txn.transaction_type == 'refund' %}
+                        <i class="fas fa-undo"></i>
+                        {% else %}
+                        <i class="fas fa-gift"></i>
+                        {% endif %}
+                    </div>
+                    <div class="txn-info">
+                        <h4>{{ txn.get_transaction_type_display }}</h4>
+                        <p>{{ txn.description }}</p>
+                        <small>{{ txn.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <div class="txn-amount {% if txn.transaction_type == 'deposit' or txn.transaction_type == 'refund' or txn.transaction_type == 'bonus' %}positive{% else %}negative{% endif %}">
+                        {% if txn.transaction_type == 'deposit' or txn.transaction_type == 'refund' or txn.transaction_type == 'bonus' %}+{% else %}-{% endif %}
+                        {% if txn.currency == 'NGN' %}₦{% else %}${% endif %}{{ txn.amount|floatformat:2 }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            {% if transactions.has_other_pages %}
+            <div class="pagination">
+                {% if transactions.has_previous %}
+                <a href="?page={{ transactions.previous_page_number }}" class="btn btn-outline btn-sm">Previous</a>
+                {% endif %}
+                <span>Page {{ transactions.number }} of {{ transactions.paginator.num_pages }}</span>
+                {% if transactions.has_next %}
+                <a href="?page={{ transactions.next_page_number }}" class="btn btn-outline btn-sm">Next</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-receipt"></i>
+                <h3>No transactions yet</h3>
+                <p>Your transaction history will appear here</p>
+                <a href="{% url 'add_funds' %}" class="btn btn-primary">Add Funds</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.transactions-page {
+    min-height: 100vh;
+    padding-bottom: 60px;
+}
+
+.transactions-card {
+    background: var(--secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: -30px;
+    position: relative;
+    z-index: 10;
+}
+
+.transactions-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.transaction-item:last-child {
+    border-bottom: none;
+}
+
+.txn-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.transaction-item.deposit .txn-icon { background: rgba(0, 200, 83, 0.2); color: var(--success); }
+.transaction-item.purchase .txn-icon { background: rgba(255, 107, 0, 0.2); color: var(--primary); }
+.transaction-item.refund .txn-icon { background: rgba(0, 176, 255, 0.2); color: var(--info); }
+.transaction-item.bonus .txn-icon { background: rgba(255, 193, 7, 0.2); color: var(--warning); }
+
+.txn-info {
+    flex: 1;
+}
+
+.txn-info h4 {
+    font-size: 1rem;
+    margin-bottom: 5px;
+}
+
+.txn-info p {
+    color: var(--gray-500);
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+}
+
+.txn-info small {
+    color: var(--gray-600);
+}
+
+.txn-amount {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.txn-amount.positive { color: var(--success); }
+.txn-amount.negative { color: var(--danger); }
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--gray-600);
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: var(--gray-500);
+    margin-bottom: 20px;
+}
+</style>
+{% endblock %}

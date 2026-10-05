@@ -1,0 +1,192 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm {{ action|title }} - DAILYFUNDZBOOST</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: {% if action == 'approve' %}#28a745{% else %}#dc3545{% endif %};
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .deposit-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border-left: 4px solid {% if action == 'approve' %}#28a745{% else %}#dc3545{% endif %};
+        }
+        .deposit-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .deposit-row:last-child {
+            border-bottom: none;
+        }
+        .deposit-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .deposit-value {
+            color: #333;
+            font-weight: 500;
+        }
+        .amount {
+            font-size: 32px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            color: #856404;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+        .form-group textarea:focus {
+            outline: none;
+            border-color: {% if action == 'approve' %}#28a745{% else %}#dc3545{% endif %};
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            text-align: center;
+        }
+        .btn-primary {
+            background: {% if action == 'approve' %}#28a745{% else %}#dc3545{% endif %};
+            color: white;
+        }
+        .btn-primary:hover {
+            background: {% if action == 'approve' %}#218838{% else %}#c82333{% endif %};
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{% if action == 'approve' %}✅ Approve Deposit{% else %}❌ Reject Deposit{% endif %}</h1>
+            <p>Please confirm your action</p>
+        </div>
+        
+        <div class="content">
+            <div class="warning">
+                <strong>⚠️ Confirmation Required</strong><br>
+                You are about to {{ action }} this deposit. This action cannot be undone.
+            </div>
+            
+            <div class="deposit-card">
+                <div class="deposit-row">
+                    <span class="deposit-label">Deposit ID:</span>
+                    <span class="deposit-value">#{{ deposit.id }}</span>
+                </div>
+                <div class="deposit-row">
+                    <span class="deposit-label">Amount:</span>
+                    <span class="deposit-value amount">{{ symbol }}{{ deposit.amount }}</span>
+                </div>
+                <div class="deposit-row">
+                    <span class="deposit-label">User:</span>
+                    <span class="deposit-value">{{ deposit.user.username }} ({{ deposit.user.email }})</span>
+                </div>
+                <div class="deposit-row">
+                    <span class="deposit-label">Submitted:</span>
+                    <span class="deposit-value">{{ deposit.created_at|date:"Y-m-d H:i:s" }} UTC</span>
+                </div>
+                <div class="deposit-row">
+                    <span class="deposit-label">Status:</span>
+                    <span class="deposit-value">⏳ PENDING</span>
+                </div>
+            </div>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="admin_note">Admin Note (optional):</label>
+                    <textarea name="admin_note" id="admin_note" placeholder="Add a note for the user...">{% if action == 'approve' %}Payment verified and approved{% else %}Payment not received or invalid{% endif %}</textarea>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn btn-primary">
+                        {% if action == 'approve' %}✅ Confirm Approval{% else %}❌ Confirm Rejection{% endif %}
+                    </button>
+                    <a href="/admin/social/deposit/" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

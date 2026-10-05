@@ -1,0 +1,587 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+    --admin-primary: #2563eb;
+    --admin-primary-dark: #1d4ed8;
+    --admin-dark: #0f172a;
+    --admin-secondary: #1e293b;
+    --admin-surface: #334155;
+    --admin-success: #10b981;
+    --admin-warning: #f59e0b;
+    --admin-danger: #ef4444;
+    --admin-text: #f1f5f9;
+    --admin-text-muted: #94a3b8;
+    --drawer-width: 280px;
+}
+
+/* Reset Django admin styles */
+body.admin-drawer-active {
+    margin: 0;
+    padding: 0;
+    background: var(--admin-dark);
+    min-height: 100vh;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.admin-drawer-active #header,
+.admin-drawer-active #branding,
+.admin-drawer-active #user-tools,
+.admin-drawer-active #nav-global {
+    display: none !important;
+}
+
+/* Admin Wrapper */
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Drawer */
+.admin-drawer {
+    width: var(--drawer-width);
+    background: linear-gradient(180deg, var(--admin-secondary) 0%, var(--admin-dark) 100%);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    border-right: 1px solid rgba(255,255,255,0.1);
+}
+
+.admin-drawer.collapsed {
+    transform: translateX(-100%);
+}
+
+/* Logo Section */
+.drawer-header {
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    text-align: center;
+}
+
+.drawer-logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.drawer-logo-img {
+    height: 50px;
+    width: auto;
+    object-fit: contain;
+}
+
+.drawer-logo-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--admin-primary), var(--admin-success));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.drawer-logo-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: -0.5px;
+}
+
+.drawer-logo-text span {
+    color: var(--admin-primary);
+}
+
+/* Navigation Groups */
+.nav-group {
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.nav-group-label {
+    padding: 8px 20px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--admin-text-muted);
+    font-weight: 600;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 20px;
+    color: var(--admin-text-muted);
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+    font-size: 0.9rem;
+}
+
+.nav-item:hover {
+    background: rgba(37, 99, 235, 0.15);
+    color: white;
+}
+
+.nav-item.active {
+    background: rgba(37, 99, 235, 0.2);
+    color: white;
+    border-left: 3px solid var(--admin-primary);
+}
+
+.nav-item i {
+    width: 20px;
+    font-size: 1rem;
+    text-align: center;
+}
+
+.nav-item .badge {
+    position: absolute;
+    right: 15px;
+    padding: 3px 8px;
+    font-size: 0.7rem;
+    border-radius: 50px;
+    font-weight: 600;
+}
+
+.badge-warning {
+    background: var(--admin-warning);
+    color: black;
+}
+
+.badge-danger {
+    background: var(--admin-danger);
+    color: white;
+}
+
+/* Admin Profile */
+.drawer-profile {
+    padding: 15px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: auto;
+}
+
+.profile-avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--admin-primary);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: white;
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-name {
+    font-weight: 600;
+    color: white;
+    font-size: 0.9rem;
+}
+
+.profile-role {
+    font-size: 0.75rem;
+    color: var(--admin-text-muted);
+}
+
+/* Main Content */
+.admin-main {
+    flex: 1;
+    margin-left: var(--drawer-width);
+    background: var(--admin-dark);
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+}
+
+.admin-drawer.collapsed + .admin-main {
+    margin-left: 0;
+}
+
+/* Top Bar */
+.admin-topbar {
+    background: var(--admin-secondary);
+    padding: 15px 25px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.drawer-toggle {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.drawer-toggle:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.topbar-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.topbar-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--admin-primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--admin-primary-dark);
+}
+
+.btn-outline {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: var(--admin-text);
+}
+
+.btn-outline:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+/* Content Area */
+.admin-content {
+    padding: 25px;
+    color: var(--admin-text);
+}
+
+/* Quick Stats Cards */
+.quick-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 25px;
+}
+
+.stat-card {
+    background: var(--admin-secondary);
+    border-radius: 12px;
+    padding: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.stat-icon {
+    width: 45px;
+    height: 45px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+.stat-icon.blue { background: rgba(37, 99, 235, 0.2); color: var(--admin-primary); }
+.stat-icon.green { background: rgba(16, 185, 129, 0.2); color: var(--admin-success); }
+.stat-icon.orange { background: rgba(245, 158, 11, 0.2); color: var(--admin-warning); }
+.stat-icon.red { background: rgba(239, 68, 68, 0.2); color: var(--admin-danger); }
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 10px 0 5px;
+}
+
+.stat-label {
+    color: var(--admin-text-muted);
+    font-size: 0.85rem;
+}
+
+/* Override Django default styles */
+.admin-drawer-active #content {
+    background: var(--admin-dark);
+    padding: 0;
+}
+
+.admin-drawer-active .module {
+    background: var(--admin-secondary);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    margin-bottom: 20px;
+}
+
+.admin-drawer-active .module h2, 
+.admin-drawer-active .module caption {
+    background: transparent;
+    color: white;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.admin-drawer-active table {
+    background: transparent;
+    color: var(--admin-text);
+}
+
+.admin-drawer-active th {
+    background: rgba(0,0,0,0.2);
+    color: var(--admin-text);
+}
+
+.admin-drawer-active td, .admin-drawer-active th {
+    border-color: rgba(255,255,255,0.05);
+}
+
+.admin-drawer-active tr:hover td {
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.admin-drawer-active a:link, 
+.admin-drawer-active a:visited {
+    color: var(--admin-primary);
+}
+
+.admin-drawer-active .button,
+.admin-drawer-active input[type="submit"] {
+    background: var(--admin-primary);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+}
+
+.admin-drawer-active select,
+.admin-drawer-active input[type="text"],
+.admin-drawer-active input[type="number"],
+.admin-drawer-active textarea {
+    background: var(--admin-surface);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    border-radius: 6px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 992px) {
+    .admin-drawer {
+        transform: translateX(-100%);
+    }
+    .admin-drawer.open {
+        transform: translateX(0);
+    }
+    .admin-main {
+        margin-left: 0;
+    }
+    .drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        z-index: 999;
+        display: none;
+    }
+    .drawer-overlay.active {
+        display: block;
+    }
+}
+
+@media (max-width: 576px) {
+    .quick-stats { grid-template-columns: 1fr 1fr; gap: 12px; }
+    .stat-card { padding: 15px; }
+    .stat-value { font-size: 1.4rem; }
+    .admin-topbar { padding: 12px 15px; }
+    .admin-content { padding: 15px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<script>
+document.body.classList.add('admin-drawer-active');
+</script>
+
+<div class="drawer-overlay" onclick="toggleDrawer()"></div>
+
+<div class="admin-wrapper">
+    <!-- Sidebar Drawer -->
+    <aside class="admin-drawer" id="adminDrawer">
+        <div class="drawer-header">
+            <div class="drawer-logo">
+                <img src="{% static 'images/logo.png' %}" alt="DAILYFUNDZBOOST" class="drawer-logo-img">
+            </div>
+        </div>
+        
+        <!-- Main Navigation -->
+        <nav class="nav-group">
+            <div class="nav-group-label">Main</div>
+            <a href="{% url 'admin:index' %}" class="nav-item {% if request.path == '/admin/' %}active{% endif %}">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{% url 'admin_analytics' %}" class="nav-item {% if 'analytics' in request.path %}active{% endif %}">
+                <i class="fas fa-chart-line"></i> Analytics
+            </a>
+            <a href="{% url 'admin_shell' %}" class="nav-item {% if 'shell' in request.path %}active{% endif %}">
+                <i class="fas fa-terminal"></i> Admin Shell
+            </a>
+        </nav>
+        
+        <!-- Financial -->
+        <nav class="nav-group">
+            <div class="nav-group-label">Financial</div>
+            <a href="{% url 'admin:social_deposit_changelist' %}" class="nav-item">
+                <i class="fas fa-money-bill-wave"></i> Deposits
+                <span class="badge badge-warning">{{ pending_deposits|default:"" }}</span>
+            </a>
+            <a href="{% url 'admin:social_wallet_changelist' %}" class="nav-item">
+                <i class="fas fa-wallet"></i> Wallets
+            </a>
+            <a href="{% url 'admin:social_transaction_changelist' %}" class="nav-item">
+                <i class="fas fa-exchange-alt"></i> Transactions
+            </a>
+            <a href="{% url 'admin_profit_report' %}" class="nav-item">
+                <i class="fas fa-coins"></i> Profit Report
+            </a>
+        </nav>
+        
+        <!-- SMM Services -->
+        <nav class="nav-group">
+            <div class="nav-group-label">SMM Services</div>
+            <a href="{% url 'admin:social_platform_changelist' %}" class="nav-item">
+                <i class="fab fa-instagram"></i> Platforms
+            </a>
+            <a href="{% url 'admin:social_servicecategory_changelist' %}" class="nav-item">
+                <i class="fas fa-layer-group"></i> Categories
+            </a>
+            <a href="{% url 'admin:social_service_changelist' %}" class="nav-item">
+                <i class="fas fa-box"></i> Services
+            </a>
+            <a href="{% url 'admin:social_order_changelist' %}" class="nav-item">
+                <i class="fas fa-shopping-cart"></i> Orders
+            </a>
+        </nav>
+        
+        <!-- Users & Support -->
+        <nav class="nav-group">
+            <div class="nav-group-label">Users & Support</div>
+            <a href="{% url 'admin:auth_user_changelist' %}" class="nav-item">
+                <i class="fas fa-users"></i> Users
+            </a>
+            <a href="{% url 'admin:social_profile_changelist' %}" class="nav-item">
+                <i class="fas fa-id-card"></i> Profiles
+            </a>
+            <a href="{% url 'admin:social_supportticket_changelist' %}" class="nav-item">
+                <i class="fas fa-headset"></i> Support Tickets
+            </a>
+            <a href="{% url 'admin:social_referral_changelist' %}" class="nav-item">
+                <i class="fas fa-user-friends"></i> Referrals
+            </a>
+        </nav>
+        
+        <!-- System -->
+        <nav class="nav-group">
+            <div class="nav-group-label">System</div>
+            <a href="{% url 'admin:social_sitesettings_changelist' %}" class="nav-item">
+                <i class="fas fa-cog"></i> Site Settings
+            </a>
+            <a href="{% url 'admin_api_health' %}" class="nav-item {% if 'api-health' in request.path %}active{% endif %}">
+                <i class="fas fa-heartbeat"></i> API Health
+            </a>
+            <a href="{% url 'admin:social_virtualnumberorder_changelist' %}" class="nav-item">
+                <i class="fas fa-phone"></i> Virtual Numbers
+            </a>
+        </nav>
+        
+        <!-- Admin Profile -->
+        <div class="drawer-profile">
+            <div class="profile-avatar">{{ user.username|slice:":1"|upper }}</div>
+            <div class="profile-info">
+                <div class="profile-name">{{ user.username }}</div>
+                <div class="profile-role">Administrator</div>
+            </div>
+            <a href="{% url 'admin:logout' %}" title="Logout">
+                <i class="fas fa-sign-out-alt" style="color: var(--admin-text-muted);"></i>
+            </a>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="admin-main">
+        <header class="admin-topbar">
+            <button class="drawer-toggle" onclick="toggleDrawer()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="topbar-actions">
+                <a href="/" class="topbar-btn btn-outline" target="_blank">
+                    <i class="fas fa-external-link-alt"></i> View Site
+                </a>
+                <a href="{% url 'admin_shell' %}" class="topbar-btn btn-primary">
+                    <i class="fas fa-terminal"></i> Quick Shell
+                </a>
+            </div>
+        </header>
+        
+        <div class="admin-content">
+            {{ block.super }}
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleDrawer() {
+    const drawer = document.getElementById('adminDrawer');
+    const overlay = document.querySelector('.drawer-overlay');
+    drawer.classList.toggle('open');
+    drawer.classList.toggle('collapsed');
+    overlay.classList.toggle('active');
+}
+
+// Close drawer on mobile when clicking a link
+document.querySelectorAll('.nav-item').forEach(link => {
+    link.addEventListener('click', () => {
+        if (window.innerWidth <= 992) {
+            toggleDrawer();
+        }
+    });
+});
+
+// Handle resize
+window.addEventListener('resize', () => {
+    const drawer = document.getElementById('adminDrawer');
+    const overlay = document.querySelector('.drawer-overlay');
+    if (window.innerWidth > 992) {
+        drawer.classList.remove('collapsed', 'open');
+        overlay.classList.remove('active');
+    }
+});
+</script>
+{% endblock %}

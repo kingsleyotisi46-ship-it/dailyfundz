@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}Accounts Market - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="accounts-market-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1>🛒 Accounts Market</h1>
+            <p>Buy verified social media & email accounts - Facebook, Instagram, Gmail, Outlook & more</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Filters -->
+        <div class="market-filters">
+            <form method="GET" class="filters-form">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label><i class="fas fa-filter"></i> Platform</label>
+                        <select name="platform" class="form-control" onchange="this.form.submit()">
+                            <option value="">All Platforms</option>
+                            {% for value, label in platforms %}
+                            <option value="{{ value }}" {% if selected_platform == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-globe"></i> Country</label>
+                        <input type="text" name="country" class="form-control" placeholder="Search country..." value="{{ selected_country }}">
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Filter
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="market-stats">
+            <div class="stat-item">
+                <i class="fas fa-store"></i>
+                <span>{{ listings.count }} Available</span>
+            </div>
+            <a href="{% url 'my_purchases' %}" class="stat-item clickable">
+                <i class="fas fa-shopping-bag"></i>
+                <span>My Purchases</span>
+            </a>
+        </div>
+
+        <!-- Listings Grid -->
+        <div class="listings-grid">
+            {% for listing in listings %}
+            <div class="listing-card platform-{{ listing.platform }}">
+                <div class="listing-header">
+                    <span class="platform-badge">
+                        {% if listing.platform == 'facebook' %}
+                        <i class="fab fa-facebook"></i> Facebook
+                        {% elif listing.platform == 'instagram' %}
+                        <i class="fab fa-instagram"></i> Instagram
+                        {% elif listing.platform == 'tiktok' %}
+                        <i class="fab fa-tiktok"></i> TikTok
+                        {% elif listing.platform == 'twitter' %}
+                        <i class="fab fa-twitter"></i> Twitter
+                        {% elif listing.platform == 'youtube' %}
+                        <i class="fab fa-youtube"></i> YouTube
+                        {% elif listing.platform == 'telegram' %}
+                        <i class="fab fa-telegram"></i> Telegram
+                        {% elif listing.platform == 'gmail' %}
+                        <i class="fas fa-envelope"></i> Gmail
+                        {% elif listing.platform == 'outlook' %}
+                        <i class="fas fa-envelope"></i> Outlook
+                        {% elif listing.platform == 'yahoo' %}
+                        <i class="fas fa-envelope"></i> Yahoo
+                        {% elif listing.platform == 'protonmail' %}
+                        <i class="fas fa-shield-alt"></i> ProtonMail
+                        {% elif listing.platform == 'icloud' %}
+                        <i class="fab fa-apple"></i> iCloud
+                        {% else %}
+                        <i class="fas fa-globe"></i> {{ listing.get_platform_display }}
+                        {% endif %}
+                    </span>
+                    <span class="country-tag">{{ listing.countries }}</span>
+                </div>
+                
+                <div class="listing-body">
+                    <h3 class="listing-title">{{ listing.title }}</h3>
+                    <p class="listing-description">{{ listing.description|linebreaksbr }}</p>
+                    <div class="listing-url">
+                        <i class="fas fa-link"></i>
+                        <a href="{{ listing.account_url }}" target="_blank" rel="noopener">{{ listing.account_url|truncatechars:40 }}</a>
+                    </div>
+                </div>
+                
+                <div class="listing-footer">
+                    <div class="listing-price">₦{{ listing.price_ngn|intcomma }}</div>
+                    <form action="{% url 'buy_account' listing.id %}" method="POST" class="buy-form">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-buy" onclick="return confirm('Buy this account for ₦{{ listing.price_ngn|intcomma }}?')">
+                            <i class="fas fa-cart-plus"></i> Buy Now
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state">
+                <i class="fas fa-store-slash"></i>
+                <h3>No accounts available</h3>
+                <p>Check back later for new listings</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<style>
+.accounts-market-page {
+    min-height: 100vh;
+    background: var(--dark);
+}
+
+.page-header {
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--light);
+}
+
+.page-header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.page-header p {
+    opacity: 0.9;
+}
+
+.market-filters {
+    background: var(--gray-900);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    margin: 20px 0;
+    border: 1px solid var(--gray-800);
+}
+
+.filter-row {
+    display: flex;
+    gap: 15px;
+    align-items: flex-end;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--gray-300);
+    font-size: 0.9rem;
+}
+
+.market-stats {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.stat-item {
+    background: var(--gray-900);
+    padding: 15px 25px;
+    border-radius: var(--border-radius);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--gray-300);
+    border: 1px solid var(--gray-800);
+}
+
+.stat-item.clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.stat-item.clickable:hover {
+    background: var(--gray-800);
+    color: var(--primary);
+}
+
+.stat-item i {
+    color: var(--primary);
+    font-size: 1.2rem;
+}
+
+.listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.listing-card {
+    background: var(--gray-900);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    border: 1px solid var(--gray-800);
+    transition: all 0.3s;
+}
+
+.listing-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    border-color: var(--primary);
+}
+
+.listing-header {
+    padding: 15px;
+    background: var(--gray-800);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.platform-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    color: var(--light);
+}
+
+.platform-facebook .platform-badge { color: #1877f2; }
+.platform-instagram .platform-badge { color: #e4405f; }
+.platform-tiktok .platform-badge { color: #00f2ea; }
+.platform-twitter .platform-badge { color: #1da1f2; }
+.platform-youtube .platform-badge { color: #ff0000; }
+.platform-telegram .platform-badge { color: #0088cc; }
+
+.country-tag {
+    background: var(--gray-700);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    color: var(--gray-300);
+}
+
+.listing-body {
+    padding: 20px;
+}
+
+.listing-title {
+    font-size: 1.1rem;
+    color: var(--light);
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.listing-description {
+    color: var(--gray-400);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    line-height: 1.6;
+}
+
+.listing-url {
+    background: var(--gray-800);
+    padding: 10px 15px;
+    border-radius: var(--border-radius-sm);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.listing-url i {
+    color: var(--primary);
+}
+
+.listing-url a {
+    color: var(--gray-300);
+    text-decoration: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.listing-url a:hover {
+    color: var(--primary);
+}
+
+.listing-footer {
+    padding: 15px 20px;
+    background: var(--gray-800);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.listing-price {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--success);
+}
+
+.btn-buy {
+    padding: 10px 20px;
+    font-weight: 600;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--gray-900);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--gray-800);
+}
+
+.empty-state i {
+    font-size: 4rem;
+    color: var(--gray-600);
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    color: var(--gray-400);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: var(--gray-500);
+}
+
+@media (max-width: 768px) {
+    .filter-row {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .market-stats {
+        flex-direction: column;
+    }
+    
+    .listings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

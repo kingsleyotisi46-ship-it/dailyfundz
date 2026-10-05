@@ -1,0 +1,292 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="DAILYFUNDZBOOST">
+    <meta name="description" content="DAILYFUNDZBOOST - Your #1 SMM Panel for Instagram, TikTok, YouTube & More">
+    <meta name="keywords" content="smm panel, instagram followers, tiktok views, social media marketing, Nigeria">
+    
+    <title>{% block title %}DAILYFUNDZBOOST{% endblock %}</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{% static 'manifest.json' %}">
+    
+    <!-- Favicon & App Icons -->
+    <link rel="icon" type="image/svg+xml" href="{% static 'icons/icon.svg' %}">
+    <link rel="apple-touch-icon" href="{% static 'icons/icon.svg' %}">
+    
+    <!-- Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body{% if user.is_authenticated %} class="logged-in"{% endif %} data-theme="dark">
+    {% if user.is_authenticated %}
+    <!-- Mobile App Header -->
+    <header class="app-header">
+        <div class="app-header-content">
+            <img src="{% static 'images/logo.png' %}" alt="DAILYFUNDZBOOST" class="app-header-logo">
+            <a href="{% url 'add_funds' %}" class="app-header-balance">
+                <i class="fas fa-wallet"></i> ₦{{ wallet_balance|default:"0.00" }}
+            </a>
+        </div>
+    </header>
+    {% endif %}
+    
+    <!-- PWA Install Prompt -->
+    <div class="pwa-install-prompt" id="pwaInstallPrompt" style="display: none;">
+        <div class="pwa-prompt-content">
+            <img src="{% static 'images/logo.png' %}" alt="App" class="pwa-logo">
+            <div class="pwa-text">
+                <strong>Install DAILYFUNDZBOOST App</strong>
+                <small>Add to home screen for quick access</small>
+            </div>
+            <button class="btn btn-primary btn-sm" id="pwaInstallBtn">Install</button>
+            <button class="pwa-close" onclick="dismissPwaPrompt()">&times;</button>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'home' %}" class="nav-logo">
+                <img src="{% static 'images/logo.png' %}" alt="DAILYFUNDZBOOST" class="logo-img">
+            </a>
+            
+            {% if user.is_authenticated %}
+            <div class="nav-links">
+                <a href="{% url 'main_panel' %}" class="nav-link {% if request.resolver_match.url_name == 'main_panel' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="{% url 'services' %}" class="nav-link {% if request.resolver_match.url_name == 'services' %}active{% endif %}">
+                    <i class="fas fa-rocket"></i> Services
+                </a>
+                <a href="{% url 'virtual_numbers' %}" class="nav-link {% if request.resolver_match.url_name == 'virtual_numbers' %}active{% endif %}">
+                    <i class="fas fa-phone"></i> Numbers
+                </a>
+                <a href="{% url 'orders' %}" class="nav-link {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+                    <i class="fas fa-box"></i> Orders
+                </a>
+                <a href="{% url 'add_funds' %}" class="nav-link {% if request.resolver_match.url_name == 'add_funds' %}active{% endif %}">
+                    <i class="fas fa-plus-circle"></i> Add Funds
+                </a>
+            </div>
+            
+            <div class="nav-right">
+                <div class="wallet-badge">
+                    <i class="fas fa-wallet"></i>
+                    <span>₦{{ wallet_balance|default:"0.00" }}</span>
+                </div>
+                <div class="user-menu">
+                    <button class="user-btn" onclick="toggleUserMenu()">
+                        <i class="fas fa-user-circle"></i>
+                        <span>{{ user.username }}</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        {% if user.is_staff %}
+                        <a href="{% url 'admin:index' %}"><i class="fas fa-cog"></i> Admin Panel</a>
+                        {% endif %}
+                        <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+                        <a href="{% url 'referral' %}"><i class="fas fa-gift"></i> Referral Program</a>
+                        <a href="{% url 'accounts_market' %}"><i class="fas fa-store"></i> Accounts Market</a>
+                        <a href="{% url 'my_purchases' %}"><i class="fas fa-shopping-bag"></i> My Purchases</a>
+                        <a href="{% url 'transactions' %}"><i class="fas fa-history"></i> Transactions</a>
+                        <a href="{% url 'support' %}"><i class="fas fa-headset"></i> Support</a>
+                        <hr>
+                        <a href="{% url 'logout' %}" class="logout-link"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="nav-links">
+                <a href="{% url 'home' %}#features" class="nav-link">Features</a>
+                <a href="{% url 'home' %}#pricing" class="nav-link">Pricing</a>
+                <a href="{% url 'home' %}#contact" class="nav-link">Contact</a>
+            </div>
+            <div class="nav-right">
+                <a href="{% url 'login' %}" class="btn btn-outline">Login</a>
+                <a href="{% url 'register' %}" class="btn btn-primary">Get Started</a>
+            </div>
+            {% endif %}
+            
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        {% if user.is_authenticated %}
+        <a href="{% url 'main_panel' %}"><i class="fas fa-home"></i> Dashboard</a>
+        <a href="{% url 'services' %}"><i class="fas fa-rocket"></i> Services</a>
+        <a href="{% url 'accounts_market' %}"><i class="fas fa-store"></i> Accounts Market</a>
+        <a href="{% url 'virtual_numbers' %}"><i class="fas fa-phone"></i> Numbers</a>
+        <a href="{% url 'orders' %}"><i class="fas fa-box"></i> Orders</a>
+        <a href="{% url 'add_funds' %}"><i class="fas fa-plus-circle"></i> Add Funds</a>
+        <a href="{% url 'my_purchases' %}"><i class="fas fa-shopping-bag"></i> My Purchases</a>
+        <a href="{% url 'profile' %}"><i class="fas fa-user"></i> Profile</a>
+        {% if user.is_staff %}
+        <a href="{% url 'admin:index' %}"><i class="fas fa-cog"></i> Admin</a>
+        {% endif %}
+        <a href="{% url 'logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        {% else %}
+        <a href="{% url 'login' %}">Login</a>
+        <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages-container">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            <span>{{ message }}</span>
+            <button onclick="this.parentElement.remove()">&times;</button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-section">
+                <img src="{% static 'images/logo.png' %}" alt="DAILYFUNDZBOOST" class="footer-logo">
+                <p>Your #1 SMM Panel for social media growth services.</p>
+            </div>
+            <div class="footer-section">
+                <h4>Quick Links</h4>
+                <a href="{% url 'home' %}">Home</a>
+                <a href="{% url 'services' %}">Services</a>
+                <a href="{% url 'add_funds' %}">Add Funds</a>
+            </div>
+            <div class="footer-section">
+                <h4>Contact Us</h4>
+                <p><i class="fas fa-envelope"></i> support@dailyfundzboost.trade</p>
+                <p><i class="fab fa-whatsapp"></i> +234 810 559 4678</p>
+            </div>
+            <div class="footer-section">
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="https://instagram.com/dailyfundzboost" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+                    <a href="https://twitter.com/dailyfundzboost" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a>
+                    <a href="https://facebook.com/dailyfundzboost" target="_blank" rel="noopener"><i class="fab fa-facebook"></i></a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {% now "Y" %} DAILYFUNDZBOOST. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div id='tawk_69c1f2a729e9681c3d64de5d'></div>
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date(); Tawk_API.embedded='tawk_69c1f2a729e9681c3d64de5d';
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/69c1f2a729e9681c3d64de5d/1jnlp84sc';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);})();
+    </script>
+    <!--End of Tawk.to Script-->
+
+    <script src="{% static 'js/main.js' %}"></script>
+    
+    <!-- PWA Service Worker & Install Prompt -->
+    <script>
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/static/sw.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.log('SW registration failed:', err));
+        });
+    }
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    const pwaPrompt = document.getElementById('pwaInstallPrompt');
+    const pwaInstallBtn = document.getElementById('pwaInstallBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        // Show install prompt after 5 seconds if not already installed
+        setTimeout(() => {
+            if (!window.matchMedia('(display-mode: standalone)').matches) {
+                pwaPrompt.style.display = 'block';
+            }
+        }, 5000);
+    });
+
+    if (pwaInstallBtn) {
+        pwaInstallBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log('PWA install outcome:', outcome);
+                deferredPrompt = null;
+                pwaPrompt.style.display = 'none';
+            }
+        });
+    }
+
+    function dismissPwaPrompt() {
+        pwaPrompt.style.display = 'none';
+        localStorage.setItem('pwaPromptDismissed', 'true');
+    }
+
+    // Don't show if already dismissed
+    if (localStorage.getItem('pwaPromptDismissed')) {
+        pwaPrompt.style.display = 'none';
+    }
+    </script>
+    
+    {% if user.is_authenticated %}
+    <!-- Mobile Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="bottom-nav-items">
+            <a href="{% url 'main_panel' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'main_panel' or request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="{% url 'services' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'services' %}active{% endif %}">
+                <i class="fas fa-store"></i>
+                <span>Services</span>
+            </a>
+            <a href="{% url 'orders' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'orders' %}active{% endif %}">
+                <i class="fas fa-box"></i>
+                <span>Orders</span>
+            </a>
+            <a href="{% url 'add_funds' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'add_funds' %}active{% endif %}">
+                <i class="fas fa-wallet"></i>
+                <span>Wallet</span>
+            </a>
+            <a href="{% url 'profile' %}" class="bottom-nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </nav>
+    {% endif %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

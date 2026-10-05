@@ -1,0 +1,205 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - DAILYFUNDZBOOST</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+            overflow: hidden;
+            text-align: center;
+        }
+        .header {
+            background: {% if success %}{% if action == 'approved' %}#28a745{% else %}#dc3545{% endif %}{% else %}#ffc107{% endif %};
+            color: {% if success or error %}white{% else %}#000{% endif %};
+            padding: 40px;
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .content {
+            padding: 40px;
+        }
+        .message {
+            font-size: 18px;
+            color: #333;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .deposit-summary {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            border-left: 4px solid {% if action == 'approved' %}#28a745{% else %}#dc3545{% endif %};
+        }
+        .deposit-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .deposit-row:last-child {
+            border-bottom: none;
+        }
+        .deposit-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .deposit-value {
+            color: #333;
+            font-weight: 500;
+        }
+        .error-box {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="icon">
+                {% if success %}
+                    {% if action == 'approved' %}✅{% else %}❌{% endif %}
+                {% else %}
+                    ⚠️
+                {% endif %}
+            </div>
+            <h1>{{ title }}</h1>
+        </div>
+        
+        <div class="content">
+            {% if success %}
+                <div class="message">
+                    {{ message }}
+                </div>
+                
+                {% if deposit %}
+                <div class="deposit-summary">
+                    <div class="deposit-row">
+                        <span class="deposit-label">Deposit ID:</span>
+                        <span class="deposit-value">#{{ deposit.id }}</span>
+                    </div>
+                    <div class="deposit-row">
+                        <span class="deposit-label">Amount:</span>
+                        <span class="deposit-value">₦{{ deposit.amount }}</span>
+                    </div>
+                    <div class="deposit-row">
+                        <span class="deposit-label">User:</span>
+                        <span class="deposit-value">{{ deposit.user.username }}</span>
+                    </div>
+                    <div class="deposit-row">
+                        <span class="deposit-label">Status:</span>
+                        <span class="deposit-value">
+                            {% if action == 'approved' %}
+                                <span style="color: #28a745; font-weight: bold;">✅ APPROVED</span>
+                            {% else %}
+                                <span style="color: #dc3545; font-weight: bold;">❌ REJECTED</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="deposit-row">
+                        <span class="deposit-label">Processed At:</span>
+                        <span class="deposit-value">{{ deposit.reviewed_at|date:"Y-m-d H:i:s" }} UTC</span>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <p style="color: #666; margin-top: 20px;">
+                    {% if action == 'approved' %}
+                    The user has been notified and funds have been credited to their wallet.
+                    {% else %}
+                    The user has been notified about the rejection.
+                    {% endif %}
+                </p>
+            {% else %}
+                <div class="error-box">
+                    <strong>Error:</strong><br>
+                    {{ error }}
+                </div>
+                
+                {% if deposit %}
+                <div class="deposit-summary">
+                    <div class="deposit-row">
+                        <span class="deposit-label">Deposit ID:</span>
+                        <span class="deposit-value">#{{ deposit.id }}</span>
+                    </div>
+                    <div class="deposit-row">
+                        <span class="deposit-label">Current Status:</span>
+                        <span class="deposit-value">{{ deposit.status|upper }}</span>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+            
+            <div class="button-group">
+                <a href="/admin/social/deposit/" class="btn btn-primary">View All Deposits</a>
+                <a href="/admin/" class="btn btn-secondary">Admin Dashboard</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

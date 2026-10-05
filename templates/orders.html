@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}My Orders - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="orders-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1>📦 My Orders</h1>
+            <p>Track and manage all your orders</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Stats -->
+        <div class="orders-stats">
+            <div class="stat-item">
+                <span class="stat-value">{{ total_orders|default:0 }}</span>
+                <span class="stat-label">Total Orders</span>
+            </div>
+            <div class="stat-item completed">
+                <span class="stat-value">{{ completed_orders|default:0 }}</span>
+                <span class="stat-label">Completed</span>
+            </div>
+            <div class="stat-item pending">
+                <span class="stat-value">{{ pending_orders|default:0 }}</span>
+                <span class="stat-label">Pending</span>
+            </div>
+            <div class="stat-item processing">
+                <span class="stat-value">{{ processing_orders|default:0 }}</span>
+                <span class="stat-label">Processing</span>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="orders-filters">
+            <form method="GET" class="filters-form">
+                <select name="status" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Status</option>
+                    <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                    <option value="processing" {% if status_filter == 'processing' %}selected{% endif %}>Processing</option>
+                    <option value="in_progress" {% if status_filter == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="partial" {% if status_filter == 'partial' %}selected{% endif %}>Partial</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+                <select name="platform" class="form-control" onchange="this.form.submit()">
+                    <option value="">All Platforms</option>
+                    {% for platform in platforms %}
+                    <option value="{{ platform.slug }}" {% if platform_filter == platform.slug %}selected{% endif %}>
+                        {{ platform.icon }} {{ platform.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                {% if status_filter or platform_filter %}
+                <a href="{% url 'orders' %}" class="btn btn-outline btn-sm">Clear</a>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Orders List -->
+        <div class="orders-list">
+            {% if orders %}
+                {% for order in orders %}
+                <div class="order-card">
+                    <div class="order-header">
+                        <div class="order-id">
+                            <span class="label">Order #</span>
+                            <span class="value">{{ order.id }}</span>
+                        </div>
+                        <div class="order-status status-{{ order.status }}">
+                            {% if order.status == 'pending' %}
+                                <i class="fas fa-clock"></i>
+                            {% elif order.status == 'processing' or order.status == 'in_progress' %}
+                                <i class="fas fa-spinner fa-spin"></i>
+                            {% elif order.status == 'completed' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif order.status == 'partial' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% else %}
+                                <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                            {{ order.get_status_display }}
+                        </div>
+                    </div>
+                    
+                    <div class="order-body">
+                        <div class="order-service">
+                            <span class="platform-icon">{{ order.service.platform.icon }}</span>
+                            <div class="service-details">
+                                <h3>{{ order.service.name }}</h3>
+                                <span class="platform-name">{{ order.service.platform.name }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="order-info-grid">
+                            <div class="info-item">
+                                <span class="label">Quantity</span>
+                                <span class="value">{{ order.quantity|intcomma }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Start Count</span>
+                                <span class="value">{{ order.start_count|intcomma }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Remains</span>
+                                <span class="value">{{ order.remains|intcomma }}</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="label">Price</span>
+                                <span class="value price">${{ order.price }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="order-link">
+                            <span class="label"><i class="fas fa-link"></i> Link:</span>
+                            <a href="{{ order.link }}" target="_blank" class="link-text">{{ order.link|truncatechars:50 }}</a>
+                        </div>
+                    </div>
+                    
+                    <div class="order-footer">
+                        <span class="order-date">
+                            <i class="fas fa-calendar"></i> {{ order.created_at|date:"M d, Y H:i" }}
+                        </span>
+                        {% if order.provider_order_id %}
+                        <span class="provider-id">
+                            Provider ID: {{ order.provider_order_id }}
+                        </span>
+                        {% endif %}
+                        {% if order.status == 'pending' or order.status == 'processing' %}
+                        <form method="POST" action="{% url 'cancel_order' order.id %}" class="cancel-form" onsubmit="return confirm('Are you sure you want to cancel this order? You will receive a refund.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-times"></i> Cancel & Refund
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if orders.has_other_pages %}
+                <div class="pagination">
+                    {% if orders.has_previous %}
+                    <a href="?page={{ orders.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}" class="btn btn-outline btn-sm">
+                        <i class="fas fa-chevron-left"></i> Previous
+                    </a>
+                    {% endif %}
+                    
+                    <span class="page-info">Page {{ orders.number }} of {{ orders.paginator.num_pages }}</span>
+                    
+                    {% if orders.has_next %}
+                    <a href="?page={{ orders.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if platform_filter %}&platform={{ platform_filter }}{% endif %}" class="btn btn-outline btn-sm">
+                        Next <i class="fas fa-chevron-right"></i>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="empty-state">
+                    <img src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?w=300&q=80" alt="No orders">
+                    <h3>No orders yet</h3>
+                    <p>Start boosting your social media by placing your first order!</p>
+                    <a href="{% url 'services' %}" class="btn btn-primary">
+                        <i class="fas fa-rocket"></i> Browse Services
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.orders-page {
+    min-height: 100vh;
+    padding-bottom: 60px;
+}
+
+.orders-stats {
+    display: flex;
+    gap: 20px;
+    margin: -30px 0 30px;
+    position: relative;
+    z-index: 10;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    flex: 1;
+    min-width: 150px;
+    background: var(--secondary);
+    padding: 20px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-item .stat-value {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-item.completed .stat-value { color: var(--success); }
+.stat-item.pending .stat-value { color: var(--warning); }
+.stat-item.processing .stat-value { color: var(--info); }
+
+.stat-item .stat-label {
+    color: var(--gray-500);
+    font-size: 0.9rem;
+}
+
+.orders-filters {
+    margin-bottom: 30px;
+}
+
+.filters-form {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filters-form .form-control {
+    width: auto;
+    min-width: 150px;
+}
+
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-card {
+    background: var(--secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    transition: var(--transition);
+}
+
+.order-card:hover {
+    border-color: var(--primary);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.order-id .label {
+    color: var(--gray-500);
+    font-size: 0.85rem;
+}
+
+.order-id .value {
+    font-weight: 700;
+    color: var(--primary);
+    margin-left: 5px;
+}
+
+.order-status {
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-pending { background: rgba(255, 193, 7, 0.2); color: var(--warning); }
+.status-processing, .status-in_progress { background: rgba(0, 176, 255, 0.2); color: var(--info); }
+.status-completed { background: rgba(0, 200, 83, 0.2); color: var(--success); }
+.status-partial { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
+.status-cancelled, .status-refunded { background: rgba(255, 23, 68, 0.2); color: var(--danger); }
+
+.order-body {
+    padding: 20px;
+}
+
+.order-service {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.platform-icon {
+    font-size: 2.5rem;
+}
+
+.service-details h3 {
+    font-size: 1.1rem;
+    margin-bottom: 3px;
+}
+
+.platform-name {
+    color: var(--gray-500);
+    font-size: 0.9rem;
+}
+
+.order-info-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    background: var(--dark);
+    padding: 12px;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+}
+
+.info-item .label {
+    display: block;
+    color: var(--gray-500);
+    font-size: 0.8rem;
+    margin-bottom: 5px;
+}
+
+.info-item .value {
+    font-weight: 700;
+}
+
+.info-item .value.price {
+    color: var(--primary);
+}
+
+.order-link {
+    background: var(--dark);
+    padding: 12px 15px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    overflow: hidden;
+}
+
+.order-link .label {
+    color: var(--gray-500);
+    white-space: nowrap;
+}
+
+.link-text {
+    color: var(--info);
+    word-break: break-all;
+}
+
+.link-text:hover {
+    text-decoration: underline;
+}
+
+.order-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.2);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.85rem;
+    color: var(--gray-500);
+}
+
+.provider-id {
+    font-family: monospace;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.page-info {
+    color: var(--gray-500);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: var(--secondary);
+    border-radius: var(--border-radius);
+}
+
+.empty-state img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+    opacity: 0.5;
+}
+
+.empty-state h3 {
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: var(--gray-500);
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .order-info-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .order-header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

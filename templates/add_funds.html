@@ -1,0 +1,811 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Add Funds - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="add-funds-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1>💰 Add Funds</h1>
+            <p>Top up your wallet via Bank Transfer or Crypto</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Payment Method Tabs -->
+        <div class="payment-tabs">
+            <button class="payment-tab active" onclick="switchPaymentTab('bank')">
+                <i class="fas fa-university"></i> Bank Transfer
+            </button>
+            <button class="payment-tab" onclick="switchPaymentTab('crypto')">
+                <i class="fab fa-bitcoin"></i> Cryptocurrency
+            </button>
+        </div>
+
+        <!-- Bank Transfer Section -->
+        <div class="payment-section" id="bankSection">
+            <div class="add-funds-grid">
+                <!-- OPay Payment Info -->
+                <div class="payment-card">
+                    <div class="payment-header">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d2/OPay_logo_2020.png/320px-OPay_logo_2020.png" alt="OPay" class="opay-logo">
+                        <h2>{{ site_settings.bank_name|default:"OPay" }} Bank Transfer</h2>
+                        <span class="recommended-badge">Recommended</span>
+                    </div>
+                    
+                    <div class="payment-details">
+                        <div class="detail-row">
+                            <span class="label">Bank Name</span>
+                            <span class="value">{{ site_settings.bank_name|default:"OPay" }} (Paycom)</span>
+                        </div>
+                        <div class="detail-row highlight">
+                            <span class="label">Account Number</span>
+                            <span class="value account-number">
+                                <span id="opayAccount">{{ site_settings.account_number|default:"9070910294" }}</span>
+                                <button onclick="copyToClipboard('{{ site_settings.account_number|default:"9070910294" }}', this)" class="copy-btn">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Account Name</span>
+                            <span class="value">{{ site_settings.account_name|default:"DAILYFUNDZBOOST" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="exchange-rate-box">
+                        <i class="fas fa-exchange-alt"></i>
+                        <div>
+                            <span>Exchange Rate</span>
+                            <strong>$1 USD = ₦{{ exchange_rate|default:"1550" }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="payment-steps">
+                        <h3><i class="fas fa-list-ol"></i> How to Fund</h3>
+                        <div class="step">
+                            <span class="step-num">1</span>
+                            <p>Transfer any amount to the {{ site_settings.bank_name|default:"OPay" }} account</p>
+                        </div>
+                        <div class="step">
+                            <span class="step-num">2</span>
+                            <p>Take a screenshot of your payment</p>
+                        </div>
+                        <div class="step">
+                            <span class="step-num">3</span>
+                            <p>Upload screenshot in the form</p>
+                        </div>
+                        <div class="step">
+                            <span class="step-num">4</span>
+                            <p>Wait for approval (usually 5-30 mins)</p>
+                        </div>
+                    </div>
+
+                    <div class="contact-support">
+                        <p>Need help? Chat with us</p>
+                        <a href="https://wa.me/2348105594678" class="btn btn-success btn-block" target="_blank">
+                            <i class="fab fa-whatsapp"></i> WhatsApp Support
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Deposit Form -->
+                <div class="deposit-card">
+                    <h2><i class="fas fa-cloud-upload-alt"></i> Submit Bank Payment</h2>
+                    
+                    <form method="POST" enctype="multipart/form-data" class="deposit-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="payment_method" value="bank">
+                        
+                        <div class="form-group">
+                            <label>Currency <span class="required">*</span></label>
+                            <div class="currency-toggle">
+                                <label class="currency-option">
+                                    <input type="radio" name="currency" value="NGN" checked onchange="updateAmountLabel()">
+                                    <span>🇳🇬 Naira (₦)</span>
+                                </label>
+                                <label class="currency-option">
+                                    <input type="radio" name="currency" value="USD" onchange="updateAmountLabel()">
+                                    <span>🇺🇸 Dollar ($)</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Amount <span class="required">*</span></label>
+                            <div class="amount-input">
+                                <span class="currency-symbol" id="currencySymbol">₦</span>
+                                <input type="number" name="amount" class="form-control" placeholder="Enter amount" required min="100" step="0.01" id="amountInput" onchange="calculateEquivalent()">
+                            </div>
+                            <small class="form-text" id="equivalentText">Minimum: ₦100</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Payment Screenshot <span class="required">*</span></label>
+                            <div class="file-upload">
+                                <input type="file" name="payment_screenshot" id="screenshotInput" accept="image/*" required onchange="previewScreenshot(this)">
+                                <label for="screenshotInput" class="file-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Click to upload screenshot</span>
+                                    <small>PNG, JPG up to 5MB</small>
+                                </label>
+                                <img id="screenshotPreview" class="screenshot-preview" style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <div class="wallet-balance">
+                            <span>Current Balance:</span>
+                            <div class="balances">
+                                <span class="ngn">₦{{ wallet.balance_ngn|floatformat:2|default:"0.00" }}</span>
+                                <span class="usd">${{ wallet.balance_usd|floatformat:2|default:"0.00" }}</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">
+                            <i class="fas fa-paper-plane"></i> Submit for Approval
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crypto Section -->
+        <div class="payment-section" id="cryptoSection" style="display: none;">
+            <div class="add-funds-grid">
+                <!-- Crypto Payment Info -->
+                <div class="payment-card crypto-card">
+                    <div class="payment-header">
+                        <div class="crypto-icons">
+                            <i class="fab fa-bitcoin"></i>
+                            <i class="fab fa-ethereum"></i>
+                        </div>
+                        <h2>Cryptocurrency Payment</h2>
+                    </div>
+                    
+                    <div class="crypto-options">
+                        <!-- USDT TRC20 -->
+                        <div class="crypto-option" onclick="selectCrypto('usdt_trc20')">
+                            <input type="radio" name="crypto_type" value="usdt_trc20" id="usdt_trc20">
+                            <label for="usdt_trc20">
+                                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT">
+                                <div>
+                                    <strong>USDT (TRC20)</strong>
+                                    <small>Tron Network - Low fees</small>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- USDT BEP20 -->
+                        <div class="crypto-option" onclick="selectCrypto('usdt_bep20')">
+                            <input type="radio" name="crypto_type" value="usdt_bep20" id="usdt_bep20">
+                            <label for="usdt_bep20">
+                                <img src="https://cryptologos.cc/logos/tether-usdt-logo.png" alt="USDT">
+                                <div>
+                                    <strong>USDT (BEP20)</strong>
+                                    <small>Binance Smart Chain</small>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Bitcoin -->
+                        <div class="crypto-option" onclick="selectCrypto('btc')">
+                            <input type="radio" name="crypto_type" value="btc" id="btc">
+                            <label for="btc">
+                                <img src="https://cryptologos.cc/logos/bitcoin-btc-logo.png" alt="Bitcoin">
+                                <div>
+                                    <strong>Bitcoin (BTC)</strong>
+                                    <small>Bitcoin Network</small>
+                                </div>
+                            </label>
+                        </div>
+                        
+                        <!-- Ethereum -->
+                        <div class="crypto-option" onclick="selectCrypto('eth')">
+                            <input type="radio" name="crypto_type" value="eth" id="eth">
+                            <label for="eth">
+                                <img src="https://cryptologos.cc/logos/ethereum-eth-logo.png" alt="Ethereum">
+                                <div>
+                                    <strong>Ethereum (ETH)</strong>
+                                    <small>ERC20 Network</small>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Wallet Address Display -->
+                    <div class="wallet-address-section" id="walletAddressSection" style="display: none;">
+                        <h3 id="cryptoTitle">Send to this address:</h3>
+                        <div class="wallet-address-box">
+                            <span id="walletAddress" class="wallet-address"></span>
+                            <button onclick="copyWalletAddress()" class="copy-btn">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                        <div class="crypto-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>Only send <strong id="cryptoNetwork"></strong> to this address. Sending other coins will result in loss.</p>
+                        </div>
+                    </div>
+
+                    <div class="crypto-rate">
+                        <i class="fas fa-info-circle"></i>
+                        <p>After sending, submit the transaction hash below for verification. Funds credited within 15 minutes of confirmation.</p>
+                    </div>
+                </div>
+
+                <!-- Crypto Deposit Form -->
+                <div class="deposit-card">
+                    <h2><i class="fab fa-bitcoin"></i> Submit Crypto Payment</h2>
+                    
+                    <form method="POST" enctype="multipart/form-data" class="deposit-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="payment_method" value="crypto">
+                        <input type="hidden" name="crypto_type" id="selectedCryptoType" value="">
+                        
+                        <div class="form-group">
+                            <label>Amount (USD) <span class="required">*</span></label>
+                            <div class="amount-input">
+                                <span class="currency-symbol">$</span>
+                                <input type="number" name="amount" class="form-control" placeholder="Enter USD amount" required min="5" step="0.01">
+                            </div>
+                            <small class="form-text">Minimum: $5 USD</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Transaction Hash (TxID) <span class="required">*</span></label>
+                            <input type="text" name="tx_hash" class="form-control" placeholder="Enter transaction hash" required>
+                            <small class="form-text">Find this in your wallet's transaction history</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Payment Screenshot (Optional)</label>
+                            <div class="file-upload">
+                                <input type="file" name="payment_screenshot" id="cryptoScreenshotInput" accept="image/*" onchange="previewCryptoScreenshot(this)">
+                                <label for="cryptoScreenshotInput" class="file-label">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Upload screenshot (optional)</span>
+                                    <small>Helps speed up verification</small>
+                                </label>
+                                <img id="cryptoScreenshotPreview" class="screenshot-preview" style="display: none;">
+                            </div>
+                        </div>
+                        
+                        <div class="wallet-balance">
+                            <span>Current Balance:</span>
+                            <div class="balances">
+                                <span class="ngn">₦{{ wallet.balance_ngn|floatformat:2|default:"0.00" }}</span>
+                                <span class="usd">${{ wallet.balance_usd|floatformat:2|default:"0.00" }}</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg btn-block" id="cryptoSubmitBtn" disabled>
+                            <i class="fas fa-paper-plane"></i> Submit for Verification
+                        </button>
+                        <small class="submit-note">Select a cryptocurrency above first</small>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending Deposits -->
+        {% if pending_deposits %}
+        <div class="pending-deposits-section">
+            <h3><i class="fas fa-clock"></i> Recent Deposits</h3>
+            <div class="deposits-list">
+                {% for deposit in pending_deposits %}
+                <div class="deposit-item status-{{ deposit.status }}">
+                    <div class="deposit-icon">
+                        {% if deposit.status == 'pending' %}
+                        <i class="fas fa-hourglass-half"></i>
+                        {% elif deposit.status == 'approved' %}
+                        <i class="fas fa-check-circle"></i>
+                        {% else %}
+                        <i class="fas fa-times-circle"></i>
+                        {% endif %}
+                    </div>
+                    <div class="deposit-info">
+                        <span class="amount">
+                            {% if deposit.currency == 'NGN' %}₦{% else %}${% endif %}{{ deposit.amount|floatformat:2 }}
+                        </span>
+                        <small>{{ deposit.created_at|date:"M d, Y H:i" }}</small>
+                    </div>
+                    <span class="status-badge">{{ deposit.get_status_display }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.add-funds-page {
+    min-height: 100vh;
+    padding-bottom: 80px;
+}
+
+/* Payment Tabs */
+.payment-tabs {
+    display: flex;
+    gap: 10px;
+    margin: 20px 0;
+    background: var(--secondary);
+    padding: 8px;
+    border-radius: var(--border-radius);
+}
+
+.payment-tab {
+    flex: 1;
+    padding: 15px 20px;
+    border: none;
+    background: transparent;
+    color: var(--gray-400);
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.payment-tab:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.payment-tab.active {
+    background: var(--primary);
+    color: white;
+}
+
+.payment-tab i {
+    font-size: 1.2rem;
+}
+
+/* Payment Sections */
+.add-funds-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+}
+
+.payment-card, .deposit-card {
+    background: var(--secondary);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+.payment-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.payment-header h2 {
+    margin-top: 10px;
+    font-size: 1.3rem;
+}
+
+.opay-logo {
+    height: 45px;
+}
+
+.recommended-badge {
+    display: inline-block;
+    background: var(--success);
+    color: white;
+    font-size: 0.75rem;
+    padding: 4px 12px;
+    border-radius: 50px;
+    margin-top: 8px;
+}
+
+.payment-details {
+    background: var(--dark);
+    border-radius: var(--border-radius-sm);
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.detail-row:last-child { border-bottom: none; }
+.detail-row .label { color: var(--gray-500); }
+.detail-row .value { font-weight: 600; display: flex; align-items: center; gap: 8px; }
+.detail-row.highlight { background: rgba(37, 99, 235, 0.1); margin: -5px -15px; padding: 12px 15px; }
+
+.account-number {
+    font-size: 1.4rem;
+    color: var(--primary);
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+.copy-btn {
+    background: var(--primary);
+    border: none;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: var(--transition);
+    font-size: 0.85rem;
+}
+
+.copy-btn:hover { background: var(--primary-dark); }
+.copy-btn.copied { background: var(--success); }
+
+.exchange-rate-box {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    padding: 12px 16px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.exchange-rate-box i { font-size: 1.3rem; }
+.exchange-rate-box span { display: block; font-size: 0.8rem; opacity: 0.9; }
+.exchange-rate-box strong { font-size: 1.1rem; }
+
+.payment-steps h3 {
+    font-size: 1rem;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0;
+}
+
+.step-num {
+    width: 28px;
+    height: 28px;
+    background: var(--primary);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.step p { color: var(--gray-400); margin: 0; font-size: 0.9rem; }
+
+.contact-support {
+    text-align: center;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    margin-top: 20px;
+}
+
+.contact-support p { color: var(--gray-500); margin-bottom: 10px; font-size: 0.9rem; }
+
+/* Crypto Styles */
+.crypto-card .payment-header { padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.crypto-icons { font-size: 2rem; margin-bottom: 10px; }
+.crypto-icons i { margin: 0 5px; }
+.crypto-icons .fa-bitcoin { color: #f7931a; }
+.crypto-icons .fa-ethereum { color: #627eea; }
+
+.crypto-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.crypto-option {
+    cursor: pointer;
+}
+
+.crypto-option input { display: none; }
+
+.crypto-option label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--dark);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.crypto-option label:hover { border-color: rgba(37, 99, 235, 0.3); }
+.crypto-option input:checked + label { border-color: var(--primary); background: rgba(37, 99, 235, 0.1); }
+.crypto-option img { width: 32px; height: 32px; }
+.crypto-option strong { display: block; font-size: 0.9rem; }
+.crypto-option small { color: var(--gray-500); font-size: 0.75rem; }
+
+.wallet-address-section {
+    background: var(--dark);
+    padding: 15px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 15px;
+}
+
+.wallet-address-section h3 { font-size: 0.9rem; margin-bottom: 10px; color: var(--gray-400); }
+
+.wallet-address-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0,0,0,0.3);
+    padding: 12px;
+    border-radius: 8px;
+}
+
+.wallet-address {
+    flex: 1;
+    font-family: monospace;
+    font-size: 0.85rem;
+    word-break: break-all;
+    color: var(--primary);
+}
+
+.crypto-warning {
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 8px;
+    margin-top: 10px;
+}
+
+.crypto-warning i { color: var(--warning); font-size: 1.1rem; }
+.crypto-warning p { margin: 0; font-size: 0.8rem; color: var(--gray-400); }
+
+.crypto-rate {
+    display: flex;
+    gap: 10px;
+    padding: 12px;
+    background: rgba(37, 99, 235, 0.1);
+    border-radius: 8px;
+}
+
+.crypto-rate i { color: var(--primary); }
+.crypto-rate p { margin: 0; font-size: 0.85rem; color: var(--gray-400); }
+
+/* Form Styles */
+.deposit-card h2 { margin-bottom: 20px; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+
+.currency-toggle { display: flex; gap: 10px; }
+.currency-option { flex: 1; cursor: pointer; }
+.currency-option input { display: none; }
+.currency-option span {
+    display: block;
+    padding: 12px;
+    background: var(--dark);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    transition: var(--transition);
+}
+.currency-option input:checked + span { border-color: var(--primary); background: rgba(37, 99, 235, 0.1); }
+
+.amount-input { position: relative; }
+.currency-symbol {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+.amount-input .form-control { padding-left: 40px; font-size: 1.1rem; }
+
+.file-upload { position: relative; }
+.file-upload input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; }
+.file-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 30px;
+    background: var(--dark);
+    border: 2px dashed rgba(37, 99, 235, 0.3);
+    border-radius: var(--border-radius-sm);
+    cursor: pointer;
+    transition: var(--transition);
+}
+.file-label:hover { border-color: var(--primary); background: rgba(37, 99, 235, 0.05); }
+.file-label i { font-size: 2rem; color: var(--primary); margin-bottom: 8px; }
+.file-label small { color: var(--gray-600); }
+
+.screenshot-preview {
+    width: 100%;
+    max-height: 150px;
+    object-fit: contain;
+    margin-top: 10px;
+    border-radius: var(--border-radius-sm);
+    border: 1px solid var(--primary);
+}
+
+.wallet-balance {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: var(--dark);
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 15px;
+}
+.balances { display: flex; gap: 15px; }
+.balances .ngn { color: var(--primary); font-weight: 700; font-size: 1.1rem; }
+.balances .usd { color: var(--success); font-weight: 600; }
+
+.submit-note { display: block; text-align: center; color: var(--gray-500); margin-top: 8px; }
+
+/* Pending Deposits */
+.pending-deposits-section {
+    margin-top: 30px;
+    background: var(--secondary);
+    padding: 20px;
+    border-radius: var(--border-radius);
+}
+
+.pending-deposits-section h3 { margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
+.deposits-list { display: flex; flex-direction: column; gap: 10px; }
+
+.deposit-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 15px;
+    background: var(--dark);
+    border-radius: var(--border-radius-sm);
+}
+
+.deposit-icon { font-size: 1.3rem; }
+.deposit-item.status-pending .deposit-icon { color: var(--warning); }
+.deposit-item.status-approved .deposit-icon { color: var(--success); }
+.deposit-item.status-rejected .deposit-icon { color: var(--danger); }
+
+.deposit-info { flex: 1; }
+.deposit-info .amount { display: block; font-weight: 700; color: var(--primary); }
+.deposit-info small { color: var(--gray-500); }
+
+.status-badge {
+    padding: 5px 12px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-pending .status-badge { background: rgba(255, 193, 7, 0.2); color: var(--warning); }
+.status-approved .status-badge { background: rgba(0, 200, 83, 0.2); color: var(--success); }
+.status-rejected .status-badge { background: rgba(255, 23, 68, 0.2); color: var(--danger); }
+
+@media (max-width: 992px) {
+    .add-funds-grid { grid-template-columns: 1fr; }
+    .crypto-options { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 576px) {
+    .payment-tabs { flex-direction: column; }
+    .currency-toggle { flex-direction: column; }
+}
+</style>
+
+<script>
+const EXCHANGE_RATE = {{ exchange_rate|default:"1550" }};
+
+// Crypto wallet addresses from admin settings
+const walletAddresses = {
+    'usdt_trc20': { address: '{{ site_settings.usdt_trc20_address|default:"Not configured" }}', network: 'USDT on TRC20 (Tron)' },
+    'usdt_bep20': { address: '{{ site_settings.usdt_bep20_address|default:"Not configured" }}', network: 'USDT on BEP20 (BSC)' },
+    'btc': { address: '{{ site_settings.btc_address|default:"Not configured" }}', network: 'Bitcoin (BTC)' },
+    'eth': { address: '{{ site_settings.eth_address|default:"Not configured" }}', network: 'Ethereum (ETH)' },
+};
+
+function switchPaymentTab(tab) {
+    document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.payment-section').forEach(s => s.style.display = 'none');
+    
+    event.target.closest('.payment-tab').classList.add('active');
+    document.getElementById(tab + 'Section').style.display = 'block';
+}
+
+function selectCrypto(type) {
+    document.getElementById('selectedCryptoType').value = type;
+    document.getElementById('cryptoSubmitBtn').disabled = false;
+    document.querySelector('.submit-note').style.display = 'none';
+    
+    const wallet = walletAddresses[type];
+    document.getElementById('walletAddress').textContent = wallet.address;
+    document.getElementById('cryptoNetwork').textContent = wallet.network;
+    document.getElementById('cryptoTitle').textContent = `Send ${wallet.network} to:`;
+    document.getElementById('walletAddressSection').style.display = 'block';
+}
+
+function copyWalletAddress() {
+    const address = document.getElementById('walletAddress').textContent;
+    copyToClipboard(address, event.target);
+}
+
+function copyToClipboard(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('copied');
+        }, 2000);
+    });
+}
+
+function updateAmountLabel() {
+    const currency = document.querySelector('input[name="currency"]:checked').value;
+    const symbol = currency === 'NGN' ? '₦' : '$';
+    const minText = currency === 'NGN' ? 'Minimum: ₦100' : 'Minimum: $1';
+    
+    document.getElementById('currencySymbol').textContent = symbol;
+    document.getElementById('equivalentText').textContent = minText;
+    document.getElementById('amountInput').min = currency === 'NGN' ? 100 : 1;
+    
+    calculateEquivalent();
+}
+
+function calculateEquivalent() {
+    const amount = parseFloat(document.getElementById('amountInput').value) || 0;
+    const currency = document.querySelector('input[name="currency"]:checked').value;
+    
+    let text = '';
+    if (amount > 0) {
+        if (currency === 'NGN') {
+            text = `≈ $${(amount / EXCHANGE_RATE).toFixed(2)} USD`;
+        } else {
+            text = `≈ ₦${(amount * EXCHANGE_RATE).toLocaleString()} NGN`;
+        }
+    } else {
+        text = currency === 'NGN' ? 'Minimum: ₦100' : 'Minimum: $1';
+    }
+    document.getElementById('equivalentText').textContent = text;
+}
+
+function previewScreenshot(input) {
+    const preview = document.getElementById('screenshotPreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function previewCryptoScreenshot(input) {
+    const preview = document.getElementById('cryptoScreenshotPreview');
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

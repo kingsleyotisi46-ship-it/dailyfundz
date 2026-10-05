@@ -1,0 +1,46 @@
+{
+  "name": "DAILYFUNDZBOOST",
+  "short_name": "FUNDZBOOST",
+  "description": "SMM Panel - Buy Instagram Followers, TikTok Likes, YouTube Views & More",
+  "start_url": "/dashboard/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/static/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "social", "business"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "New Order",
+      "short_name": "Order",
+      "description": "Place a new SMM order",
+      "url": "/services/",
+      "icons": [{"src": "/static/icons/icon.svg", "sizes": "96x96"}]
+    },
+    {
+      "name": "Add Funds",
+      "short_name": "Wallet",
+      "description": "Add money to your wallet",
+      "url": "/add-funds/",
+      "icons": [{"src": "/static/icons/icon.svg", "sizes": "96x96"}]
+    },
+    {
+      "name": "My Orders",
+      "short_name": "Orders",
+      "description": "View your orders",
+      "url": "/orders/",
+      "icons": [{"src": "/static/icons/icon.svg", "sizes": "96x96"}]
+    }
+  ],
+  "prefer_related_applications": false
+}

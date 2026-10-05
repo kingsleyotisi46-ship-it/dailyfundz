@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Login - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-image">
+            <img src="https://images.unsplash.com/photo-1563986768494-4dee2763ff3f?w=800&q=80" alt="Social Media Marketing">
+            <div class="auth-image-overlay">
+                <h2>Welcome Back!</h2>
+                <p>Login to access your dashboard and boost your social media presence</p>
+            </div>
+        </div>
+        
+        <div class="auth-form-container">
+            <div class="auth-header">
+                <a href="{% url 'home' %}" class="auth-logo">
+                    <img src="{% static 'images/logo.png' %}" alt="DAILYFUNDZBOOST" class="auth-logo-img">
+                </a>
+                <h1>Sign In</h1>
+                <p>Enter your credentials to access your account</p>
+            </div>
+            
+            {% if messages %}
+            <div class="auth-messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="POST" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="Enter your username" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> Password</label>
+                    <div class="password-input">
+                        <input type="password" name="password" id="password" class="form-control" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember">
+                        <span>Remember me</span>
+                    </label>
+                    <a href="{% url 'password_reset' %}" class="forgot-link">Forgot password?</a>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Sign In
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Don't have an account? <a href="{% url 'register' %}">Create one</a></p>
+            </div>
+            
+            <div class="auth-support">
+                <p>Need help? <a href="https://wa.me/2348105594678" target="_blank"><i class="fab fa-whatsapp"></i> Chat on WhatsApp</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--gray-100), var(--light));
+}
+
+.auth-container {
+    display: flex;
+    max-width: 1000px;
+    width: 100%;
+    background: var(--light);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+}
+
+.auth-image {
+    flex: 1;
+    position: relative;
+    min-height: 500px;
+    display: none;
+}
+
+.auth-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.auth-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(15, 23, 42, 0.9));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px;
+    color: var(--light);
+}
+
+.auth-image-overlay h2 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.auth-image-overlay p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+.auth-form-container {
+    flex: 1;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--light);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 30px;
+}
+
+.auth-logo-img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.auth-logo .logo-icon {
+    font-size: 2rem;
+}
+
+.auth-logo .logo-text {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: var(--dark);
+}
+
+.auth-header p {
+    color: var(--gray-600);
+}
+
+.auth-messages {
+    margin-bottom: 20px;
+}
+
+.auth-messages .alert {
+    padding: 12px 15px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--gray-700);
+    font-size: 0.9rem;
+}
+
+.auth-form label i {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.password-input {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    padding: 5px;
+}
+
+.toggle-password:hover {
+    color: var(--primary);
+}
+
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--gray-600);
+}
+
+.remember-me input {
+    accent-color: var(--primary);
+}
+
+.forgot-link {
+    color: var(--primary);
+}
+
+.forgot-link:hover {
+    text-decoration: underline;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.auth-footer p {
+    color: var(--gray-600);
+}
+
+.auth-footer a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.auth-support {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.auth-support p {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+}
+
+.auth-support a {
+    color: #25d366;
+}
+
+.auth-support a:hover {
+    text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+    .auth-image {
+        display: block;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-form-container {
+        padding: 30px 20px;
+    }
+}
+</style>
+
+<script>
+function togglePassword() {
+    const password = document.getElementById('password');
+    const eyeIcon = document.getElementById('eyeIcon');
+    
+    if (password.type === 'password') {
+        password.type = 'text';
+        eyeIcon.classList.remove('fa-eye');
+        eyeIcon.classList.add('fa-eye-slash');
+    } else {
+        password.type = 'password';
+        eyeIcon.classList.remove('fa-eye-slash');
+        eyeIcon.classList.add('fa-eye');
+    }
+}
+
+function showForgotPassword() {
+    alert('Password Reset: Please contact support via WhatsApp at +234 810 559 4678 for password reset assistance.');
+}
+</script>
+{% endblock %}

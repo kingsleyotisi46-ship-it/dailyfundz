@@ -1,0 +1,727 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}DAILYFUNDZBOOST - #1 SMM Panel in Nigeria{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Review Popup Styles */
+.review-popup {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 12px;
+    padding: 12px 16px;
+    max-width: 280px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    z-index: 999;
+    animation: slideIn 0.5s ease;
+    display: none;
+    border: 1px solid rgba(255,255,255,0.1);
+}
+
+@keyframes slideIn {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+.review-popup .review-content {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.review-popup .reviewer-img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary);
+}
+
+.review-popup .review-text {
+    flex: 1;
+}
+
+.review-popup .reviewer-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 2px;
+}
+
+.review-popup .country-flag {
+    font-size: 1rem;
+}
+
+.review-popup .review-stars {
+    font-size: 0.75rem;
+    margin-bottom: 4px;
+}
+
+.review-popup .review-message {
+    font-size: 0.8rem;
+    color: var(--gray-400);
+    line-height: 1.4;
+    margin: 0;
+}
+
+.review-popup .review-service {
+    font-size: 0.7rem;
+    color: var(--primary);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.review-popup .close-popup {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    color: var(--gray-500);
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    line-height: 1;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero">
+    <div class="hero-bg">
+        <div class="hero-gradient"></div>
+    </div>
+    
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="hero-badges">
+                <span class="hero-badge pulse">🔥 #1 SMM Panel in Nigeria</span>
+                <span class="hero-badge">⚡ Instant Delivery</span>
+                <span class="hero-badge new">🆕 Cheapest Prices</span>
+            </div>
+            
+            <h1 class="hero-title">
+                Boost Your<br>
+                <span class="gradient-text">Social Media</span><br>
+                Growth Today
+            </h1>
+            
+            <p class="hero-description">
+                Get <strong>Instagram followers</strong>, <strong>TikTok views</strong>, <strong>YouTube subscribers</strong>, 
+                and more at the <span class="highlight">lowest prices</span> in Nigeria!
+                Trusted by <span class="highlight">50,000+</span> users worldwide.
+            </p>
+            
+            <div class="hero-buttons">
+                <a href="{% url 'register' %}" class="btn btn-primary btn-xl glow-btn">
+                    <i class="fas fa-rocket"></i> Get Started Free
+                </a>
+                <a href="#services" class="btn btn-glass btn-xl">
+                    <i class="fas fa-tags"></i> View Prices
+                </a>
+            </div>
+            
+            <div class="hero-trust">
+                <div class="trust-avatars">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User">
+                    <img src="https://randomuser.me/api/portraits/men/67.jpg" alt="User">
+                    <img src="https://randomuser.me/api/portraits/women/17.jpg" alt="User">
+                    <span class="more">+50K</span>
+                </div>
+                <div class="trust-text">
+                    <span class="stars">⭐⭐⭐⭐⭐</span>
+                    <span>Rated 4.9/5 by 50,000+ users</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="hero-visual">
+            <div class="phone-mockup">
+                <div class="phone-frame">
+                    <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=400&q=80" alt="SMM Services">
+                </div>
+                <div class="floating-card card-1">
+                    <i class="fab fa-instagram"></i>
+                    <div>
+                        <strong>+10,847</strong>
+                        <span>Orders Today</span>
+                    </div>
+                </div>
+                <div class="floating-card card-2">
+                    <i class="fas fa-bolt"></i>
+                    <div>
+                        <strong>Instant</strong>
+                        <span>Delivery</span>
+                    </div>
+                </div>
+                <div class="floating-card card-3">
+                    <i class="fas fa-check-circle"></i>
+                    <div>
+                        <strong>100%</strong>
+                        <span>Satisfaction</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Bar -->
+<section class="stats-bar">
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-icon">📱</span>
+                <span class="stat-number">500K+</span>
+                <span class="stat-label">Orders Completed</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-icon">👥</span>
+                <span class="stat-number">50K+</span>
+                <span class="stat-label">Happy Users</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-icon">⚡</span>
+                <span class="stat-number">24/7</span>
+                <span class="stat-label">Active Support</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-icon">🏆</span>
+                <span class="stat-number">#1</span>
+                <span class="stat-label">SMM Panel</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Platform Logos -->
+<section class="logos-section">
+    <div class="container">
+        <p class="logos-title">Services We Offer</p>
+        <div class="platform-logos">
+            <div class="platform-logo"><i class="fab fa-instagram"></i> Instagram</div>
+            <div class="platform-logo"><i class="fab fa-tiktok"></i> TikTok</div>
+            <div class="platform-logo"><i class="fab fa-youtube"></i> YouTube</div>
+            <div class="platform-logo"><i class="fab fa-facebook"></i> Facebook</div>
+            <div class="platform-logo"><i class="fab fa-twitter"></i> Twitter</div>
+            <div class="platform-logo"><i class="fab fa-telegram"></i> Telegram</div>
+            <div class="platform-logo"><i class="fab fa-spotify"></i> Spotify</div>
+            <div class="platform-logo"><i class="fab fa-whatsapp"></i> WhatsApp</div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section class="services-section" id="services">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">Our Services</span>
+            <h2>Premium <span class="gradient-text">SMM Services</span></h2>
+            <p>Grow your social media presence with our reliable services</p>
+        </div>
+        
+        <div class="service-categories">
+            <!-- Instagram -->
+            <div class="category-card">
+                <div class="category-header instagram">
+                    <div class="category-icon">
+                        <i class="fab fa-instagram"></i>
+                    </div>
+                    <h3>Instagram</h3>
+                    <span class="category-badge">Most Popular</span>
+                </div>
+                <div class="category-body">
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Followers</h4>
+                            <p>High-quality, real-looking followers</p>
+                        </div>
+                        <span class="price">From ₦50/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Likes</h4>
+                            <p>Instant likes on posts & reels</p>
+                        </div>
+                        <span class="price">From ₦30/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Views</h4>
+                            <p>Reels, stories, video views</p>
+                        </div>
+                        <span class="price">From ₦20/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Comments</h4>
+                            <p>Custom & random comments</p>
+                        </div>
+                        <span class="price">From ₦100/100</span>
+                    </div>
+                </div>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-block">Order Now</a>
+            </div>
+
+            <!-- TikTok -->
+            <div class="category-card">
+                <div class="category-header tiktok">
+                    <div class="category-icon">
+                        <i class="fab fa-tiktok"></i>
+                    </div>
+                    <h3>TikTok</h3>
+                    <span class="category-badge">Trending</span>
+                </div>
+                <div class="category-body">
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Followers</h4>
+                            <p>Real & active followers</p>
+                        </div>
+                        <span class="price">From ₦80/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Views</h4>
+                            <p>Video views with retention</p>
+                        </div>
+                        <span class="price">From ₦15/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Likes</h4>
+                            <p>Boost your content engagement</p>
+                        </div>
+                        <span class="price">From ₦25/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Shares</h4>
+                            <p>Increase your reach</p>
+                        </div>
+                        <span class="price">From ₦40/1K</span>
+                    </div>
+                </div>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-block">Order Now</a>
+            </div>
+
+            <!-- YouTube -->
+            <div class="category-card">
+                <div class="category-header youtube">
+                    <div class="category-icon">
+                        <i class="fab fa-youtube"></i>
+                    </div>
+                    <h3>YouTube</h3>
+                    <span class="category-badge">Monetization</span>
+                </div>
+                <div class="category-body">
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Subscribers</h4>
+                            <p>Real subscribers for monetization</p>
+                        </div>
+                        <span class="price">From ₦150/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Views</h4>
+                            <p>High retention watch time</p>
+                        </div>
+                        <span class="price">From ₦100/1K</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Watch Hours</h4>
+                            <p>4000 hours package</p>
+                        </div>
+                        <span class="price">From ₦15,000</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Likes</h4>
+                            <p>Thumbs up on videos</p>
+                        </div>
+                        <span class="price">From ₦50/1K</span>
+                    </div>
+                </div>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-block">Order Now</a>
+            </div>
+
+            <!-- Virtual Numbers -->
+            <div class="category-card">
+                <div class="category-header numbers">
+                    <div class="category-icon">
+                        <i class="fas fa-phone-alt"></i>
+                    </div>
+                    <h3>Virtual Numbers</h3>
+                    <span class="category-badge new">New!</span>
+                </div>
+                <div class="category-body">
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>WhatsApp</h4>
+                            <p>USA, UK, Nigeria & more</p>
+                        </div>
+                        <span class="price">From ₦500</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Telegram</h4>
+                            <p>Receive OTP verification</p>
+                        </div>
+                        <span class="price">From ₦300</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Google/Gmail</h4>
+                            <p>Create verified accounts</p>
+                        </div>
+                        <span class="price">From ₦400</span>
+                    </div>
+                    <div class="service-item">
+                        <div class="service-info">
+                            <h4>Any Service</h4>
+                            <p>100+ services available</p>
+                        </div>
+                        <span class="price">From ₦200</span>
+                    </div>
+                </div>
+                <a href="{% url 'register' %}" class="btn btn-primary btn-block">Get Number</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">Why Us</span>
+            <h2>Why Choose <span class="gradient-text">DAILYFUNDZBOOST</span></h2>
+            <p>The best SMM panel in Nigeria with unmatched service</p>
+        </div>
+        
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Delivery</h3>
+                <p>Most orders start within seconds, not hours</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💰</div>
+                <h3>Cheapest Prices</h3>
+                <p>Lowest prices guaranteed - beat any competitor</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>100% Safe</h3>
+                <p>No password required, your accounts are safe</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3>High Quality</h3>
+                <p>Real-looking followers and engagement</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💳</div>
+                <h3>Easy Payment</h3>
+                <p>Pay via OPay, Bank Transfer, or Crypto</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📞</div>
+                <h3>24/7 Support</h3>
+                <p>Always here to help via WhatsApp</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">How It Works</span>
+            <h2>Start Growing in <span class="gradient-text">3 Easy Steps</span></h2>
+        </div>
+        
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3>Create Account</h3>
+                <p>Sign up for free in 30 seconds</p>
+            </div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <h3>Add Funds</h3>
+                <p>Deposit via OPay or Crypto</p>
+            </div>
+            <div class="step-arrow"><i class="fas fa-arrow-right"></i></div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <h3>Place Order</h3>
+                <p>Select service & watch it grow!</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Testimonials -->
+<section class="testimonials-section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">Testimonials</span>
+            <h2>Loved by <span class="gradient-text">Thousands</span> Worldwide</h2>
+            <p>See what our customers from around the world are saying</p>
+        </div>
+        
+        <div class="testimonials-grid">
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Customer">
+                    <div>
+                        <h4>Chukwuemeka O. <span class="country-flag">🇳🇬</span></h4>
+                        <span>Lagos, Nigeria</span>
+                    </div>
+                </div>
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <p>"Got 10K Instagram followers in just 2 days! Amazing quality and prices. My business page is booming now!"</p>
+                <div class="testimonial-service"><i class="fab fa-instagram"></i> Instagram Followers</div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Customer">
+                    <div>
+                        <h4>Sarah M. <span class="country-flag">🇺🇸</span></h4>
+                        <span>New York, USA</span>
+                    </div>
+                </div>
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <p>"Best SMM panel I've used! Fast delivery and the prices are unbeatable. Highly recommend to everyone."</p>
+                <div class="testimonial-service"><i class="fab fa-tiktok"></i> TikTok Services</div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <img src="https://randomuser.me/api/portraits/men/75.jpg" alt="Customer">
+                    <div>
+                        <h4>James L. <span class="country-flag">🇬🇧</span></h4>
+                        <span>London, UK</span>
+                    </div>
+                </div>
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <p>"Reached YouTube monetization thanks to this service! Great watch hours package. Worth every penny."</p>
+                <div class="testimonial-service"><i class="fab fa-youtube"></i> YouTube Growth</div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Customer">
+                    <div>
+                        <h4>Priya S. <span class="country-flag">🇮🇳</span></h4>
+                        <span>Mumbai, India</span>
+                    </div>
+                </div>
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <p>"Virtual numbers work perfectly! Got WhatsApp verified instantly. Great support team too."</p>
+                <div class="testimonial-service"><i class="fab fa-whatsapp"></i> Virtual Numbers</div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <img src="https://randomuser.me/api/portraits/men/22.jpg" alt="Customer">
+                    <div>
+                        <h4>Ahmed K. <span class="country-flag">🇦🇪</span></h4>
+                        <span>Dubai, UAE</span>
+                    </div>
+                </div>
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <p>"Using this for my e-commerce business. Best investment ever! Great for brand visibility."</p>
+                <div class="testimonial-service"><i class="fab fa-facebook"></i> Facebook Services</div>
+            </div>
+            
+            <div class="testimonial-card">
+                <div class="testimonial-header">
+                    <img src="https://randomuser.me/api/portraits/women/28.jpg" alt="Customer">
+                    <div>
+                        <h4>Grace A. <span class="country-flag">🇬🇭</span></h4>
+                        <span>Accra, Ghana</span>
+                    </div>
+                </div>
+                <div class="testimonial-stars">⭐⭐⭐⭐⭐</div>
+                <p>"Best service in Africa! Fast, reliable and cheap. I've recommended to all my friends."</p>
+                <div class="testimonial-service"><i class="fas fa-star"></i> Multiple Services</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+    <div class="container">
+        <div class="section-header">
+            <span class="section-badge">FAQ</span>
+            <h2>Frequently Asked <span class="gradient-text">Questions</span></h2>
+        </div>
+        
+        <div class="faq-grid">
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Is it safe to use your services?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes! We never ask for your password. All services are delivered safely using your public profile link.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>How long does delivery take?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Most orders start within 0-30 minutes. Large orders may be spread over 24-72 hours for natural growth.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>What payment methods do you accept?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>We accept OPay bank transfer, direct bank transfer, and cryptocurrency (USDT, Bitcoin).</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Do followers/likes drop?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Some drop is normal (5-10%). We offer refill guarantee on most services. Premium services have less drop.</p>
+                </div>
+            </div>
+            
+            <div class="faq-item" onclick="toggleFaq(this)">
+                <div class="faq-question">
+                    <span>Can I get a refund?</span>
+                    <i class="fas fa-chevron-down"></i>
+                </div>
+                <div class="faq-answer">
+                    <p>Yes, if we cannot deliver your order, you'll receive a full refund to your wallet balance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Ready to <span class="gradient-text">Boost</span> Your Social Media?</h2>
+            <p>Join 50,000+ users who trust DAILYFUNDZBOOST for their growth</p>
+            <div class="cta-buttons">
+                <a href="{% url 'register' %}" class="btn btn-light btn-xl">
+                    <i class="fas fa-rocket"></i> Get Started Free
+                </a>
+                <a href="{% url 'support' %}" class="btn btn-glass btn-xl">
+                    <i class="fas fa-headset"></i> Get Support
+                </a>
+            </div>
+            <div class="cta-features">
+                <span><i class="fas fa-check"></i> Free to join</span>
+                <span><i class="fas fa-check"></i> No monthly fees</span>
+                <span><i class="fas fa-check"></i> Instant delivery</span>
+                <span><i class="fas fa-check"></i> 24/7 support</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Review Popup -->
+<div class="review-popup" id="reviewPopup">
+    <button class="close-popup" onclick="closeReviewPopup()">&times;</button>
+    <div class="review-content">
+        <img src="" alt="Reviewer" class="reviewer-img" id="popupImg">
+        <div class="review-text">
+            <div class="reviewer-name">
+                <span id="popupName"></span>
+                <span class="country-flag" id="popupFlag"></span>
+            </div>
+            <div class="review-stars">⭐⭐⭐⭐⭐</div>
+            <p class="review-message" id="popupMessage"></p>
+            <div class="review-service" id="popupService"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// International Reviews Data
+const reviews = [
+    { name: "John D.", country: "🇺🇸", img: "https://randomuser.me/api/portraits/men/1.jpg", message: "Amazing service! Got 5K followers instantly.", service: "Instagram" },
+    { name: "Emma W.", country: "🇬🇧", img: "https://randomuser.me/api/portraits/women/2.jpg", message: "Best SMM panel in the UK market!", service: "TikTok" },
+    { name: "Chidi O.", country: "🇳🇬", img: "https://randomuser.me/api/portraits/men/3.jpg", message: "My business page is growing fast!", service: "Facebook" },
+    { name: "Marie F.", country: "🇫🇷", img: "https://randomuser.me/api/portraits/women/4.jpg", message: "Très bon service! Merci!", service: "YouTube" },
+    { name: "Hans M.", country: "🇩🇪", img: "https://randomuser.me/api/portraits/men/5.jpg", message: "Fast delivery and great quality.", service: "Instagram" },
+    { name: "Priya P.", country: "🇮🇳", img: "https://randomuser.me/api/portraits/women/6.jpg", message: "Virtual numbers work perfectly!", service: "WhatsApp" },
+    { name: "Ahmed H.", country: "🇦🇪", img: "https://randomuser.me/api/portraits/men/7.jpg", message: "Best prices I've found anywhere.", service: "TikTok" },
+    { name: "Yuki T.", country: "🇯🇵", img: "https://randomuser.me/api/portraits/women/8.jpg", message: "Excellent customer support!", service: "YouTube" },
+    { name: "Carlos R.", country: "🇧🇷", img: "https://randomuser.me/api/portraits/men/9.jpg", message: "Serviço incrível! Muito rápido!", service: "Instagram" },
+    { name: "Linda K.", country: "🇿🇦", img: "https://randomuser.me/api/portraits/women/10.jpg", message: "Great for my business!", service: "Facebook" },
+    { name: "Kwame A.", country: "🇬🇭", img: "https://randomuser.me/api/portraits/men/11.jpg", message: "Best in West Africa!", service: "TikTok" },
+    { name: "Sofia L.", country: "🇮🇹", img: "https://randomuser.me/api/portraits/women/12.jpg", message: "Fantastico! Highly recommend!", service: "Instagram" },
+];
+
+let currentReview = 0;
+let popupInterval;
+
+function showReviewPopup() {
+    const popup = document.getElementById('reviewPopup');
+    const review = reviews[currentReview];
+    
+    document.getElementById('popupImg').src = review.img;
+    document.getElementById('popupName').textContent = review.name;
+    document.getElementById('popupFlag').textContent = review.country;
+    document.getElementById('popupMessage').textContent = review.message;
+    document.getElementById('popupService').innerHTML = `<i class="fas fa-check-circle"></i> ${review.service}`;
+    
+    popup.style.display = 'block';
+    
+    currentReview = (currentReview + 1) % reviews.length;
+    
+    setTimeout(() => {
+        popup.style.display = 'none';
+    }, 5000);
+}
+
+function closeReviewPopup() {
+    document.getElementById('reviewPopup').style.display = 'none';
+}
+
+// Start showing reviews after 3 seconds
+setTimeout(() => {
+    showReviewPopup();
+    popupInterval = setInterval(showReviewPopup, 10000);
+}, 3000);
+
+// FAQ Toggle
+function toggleFaq(element) {
+    element.classList.toggle('active');
+}
+</script>
+
+{% endblock %}

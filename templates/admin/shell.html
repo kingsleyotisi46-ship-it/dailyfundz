@@ -1,0 +1,680 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}AI Admin Shell - {{ title }}{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root {
+    --ai-bg: #0f172a;
+    --ai-surface: #1e293b;
+    --ai-surface-2: #334155;
+    --ai-primary: #3b82f6;
+    --ai-accent: #8b5cf6;
+    --ai-success: #10b981;
+    --ai-warning: #f59e0b;
+    --ai-danger: #ef4444;
+    --ai-text: #f1f5f9;
+    --ai-text-muted: #94a3b8;
+    --ai-border: rgba(255,255,255,0.1);
+}
+
+.ai-shell-page {
+    color: var(--ai-text);
+}
+
+.ai-shell-page h1 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+    font-size: 1.5rem;
+}
+
+.ai-shell-page h1 i {
+    background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.ai-subtitle {
+    color: var(--ai-text-muted);
+    margin-bottom: 25px;
+    font-size: 0.95rem;
+}
+
+/* AI Chat Container */
+.ai-chat-container {
+    background: var(--ai-surface);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid var(--ai-border);
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.4);
+}
+
+/* Chat Header */
+.ai-chat-header {
+    background: linear-gradient(135deg, var(--ai-surface-2), var(--ai-surface));
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--ai-border);
+}
+
+.ai-assistant-info {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.ai-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent));
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.ai-name {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.ai-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: var(--ai-success);
+}
+
+.ai-status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--ai-success);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.ai-back-btn {
+    padding: 10px 18px;
+    background: var(--ai-surface-2);
+    border: 1px solid var(--ai-border);
+    border-radius: 10px;
+    color: var(--ai-text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+}
+
+.ai-back-btn:hover {
+    background: var(--ai-primary);
+    border-color: var(--ai-primary);
+}
+
+/* Chat Messages */
+.ai-chat-messages {
+    height: 450px;
+    overflow-y: auto;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.ai-message {
+    display: flex;
+    gap: 14px;
+    max-width: 85%;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.ai-message.user {
+    margin-left: auto;
+    flex-direction: row-reverse;
+}
+
+.ai-message-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+}
+
+.ai-message.assistant .ai-message-avatar {
+    background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent));
+}
+
+.ai-message.user .ai-message-avatar {
+    background: var(--ai-surface-2);
+}
+
+.ai-message-content {
+    background: var(--ai-bg);
+    padding: 16px 20px;
+    border-radius: 16px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.ai-message.user .ai-message-content {
+    background: var(--ai-primary);
+}
+
+.ai-message-content pre {
+    background: rgba(0,0,0,0.3);
+    padding: 12px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    margin: 10px 0;
+}
+
+.ai-message-content .success { color: var(--ai-success); }
+.ai-message-content .error { color: var(--ai-danger); }
+.ai-message-content .warning { color: var(--ai-warning); }
+.ai-message-content .info { color: var(--ai-primary); }
+
+/* Typing Indicator */
+.ai-typing {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 20px;
+    background: var(--ai-bg);
+    border-radius: 16px;
+    width: fit-content;
+}
+
+.ai-typing-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--ai-text-muted);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite;
+}
+
+.ai-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.ai-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+}
+
+/* Quick Actions */
+.ai-quick-actions {
+    padding: 16px 24px;
+    background: rgba(0,0,0,0.2);
+    border-top: 1px solid var(--ai-border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ai-quick-action {
+    padding: 8px 16px;
+    background: var(--ai-surface-2);
+    border: 1px solid var(--ai-border);
+    border-radius: 20px;
+    color: var(--ai-text);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ai-quick-action:hover {
+    background: var(--ai-primary);
+    border-color: var(--ai-primary);
+    transform: translateY(-2px);
+}
+
+.ai-quick-action i {
+    font-size: 0.9rem;
+}
+
+/* Input Area */
+.ai-input-area {
+    padding: 20px 24px;
+    border-top: 1px solid var(--ai-border);
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.ai-input-wrapper {
+    flex: 1;
+    position: relative;
+}
+
+.ai-input {
+    width: 100%;
+    padding: 16px 20px;
+    padding-right: 50px;
+    background: var(--ai-bg);
+    border: 2px solid var(--ai-border);
+    border-radius: 16px;
+    color: var(--ai-text);
+    font-size: 1rem;
+    resize: none;
+    min-height: 56px;
+    max-height: 150px;
+    transition: border-color 0.2s;
+}
+
+.ai-input:focus {
+    outline: none;
+    border-color: var(--ai-primary);
+}
+
+.ai-input::placeholder {
+    color: var(--ai-text-muted);
+}
+
+.ai-send-btn {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--ai-primary), var(--ai-accent));
+    border: none;
+    border-radius: 16px;
+    color: white;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-send-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.ai-send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Examples Panel */
+.ai-examples {
+    margin-top: 25px;
+    background: var(--ai-surface);
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid var(--ai-border);
+}
+
+.ai-examples h3 {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ai-examples h3 i {
+    color: var(--ai-accent);
+}
+
+.ai-example-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.ai-example-card {
+    background: var(--ai-bg);
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid var(--ai-border);
+    transition: all 0.2s;
+}
+
+.ai-example-card:hover {
+    border-color: var(--ai-primary);
+    transform: translateY(-2px);
+}
+
+.ai-example-card h4 {
+    font-size: 0.9rem;
+    color: var(--ai-primary);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ai-example-item {
+    font-size: 0.85rem;
+    color: var(--ai-text-muted);
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 8px;
+    margin: 6px 0;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.ai-example-item:hover {
+    background: rgba(59, 130, 246, 0.15);
+    color: var(--ai-text);
+}
+
+/* Scrollbar */
+.ai-chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ai-chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.ai-chat-messages::-webkit-scrollbar-thumb {
+    background: var(--ai-surface-2);
+    border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ai-chat-header { flex-direction: column; gap: 15px; }
+    .ai-mode-selector { width: 100%; justify-content: center; }
+    .ai-message { max-width: 95%; }
+    .ai-quick-actions { justify-content: center; }
+    .ai-example-grid { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="ai-shell-page">
+    <h1><i class="fas fa-robot"></i> AI Admin Assistant</h1>
+    <p class="ai-subtitle">Tell me what you want to do in plain English. I'll handle deposits, users, services, and more.</p>
+    
+    <div class="ai-chat-container">
+        <!-- Header -->
+        <div class="ai-chat-header">
+            <div class="ai-assistant-info">
+                <div class="ai-avatar">🤖</div>
+                <div>
+                    <div class="ai-name">DAILYFUNDZBOOST AI</div>
+                    <div class="ai-status">
+                        <span class="ai-status-dot"></span>
+                        Online & Ready
+                    </div>
+                </div>
+            </div>
+            <a href="{% url 'admin:index' %}" class="ai-back-btn">
+                <i class="fas fa-arrow-left"></i> Back to Admin
+            </a>
+        </div>
+        
+        <!-- Messages -->
+        <div class="ai-chat-messages" id="chatMessages">
+            <div class="ai-message assistant">
+                <div class="ai-message-avatar">🤖</div>
+                <div class="ai-message-content">
+                    <strong>Hello Admin! 👋</strong><br><br>
+                    I'm your AI assistant for DAILYFUNDZBOOST. Just tell me what you want to do in plain English, for example:<br><br>
+                    • "Show me pending deposits"<br>
+                    • "Add ₦5,000 to john's wallet"<br>
+                    • "Approve deposit #123"<br>
+                    • "Set all services markup to 60%"<br>
+                    • "Show today's stats"<br><br>
+                    <span class="info">How can I help you today?</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="ai-quick-actions">
+            <button class="ai-quick-action" data-cmd="Show dashboard stats">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </button>
+            <button class="ai-quick-action" data-cmd="Show pending deposits">
+                <i class="fas fa-money-bill-wave"></i> Pending Deposits
+            </button>
+            <button class="ai-quick-action" data-cmd="Show recent orders">
+                <i class="fas fa-shopping-cart"></i> Orders
+            </button>
+            <button class="ai-quick-action" data-cmd="Show recent users">
+                <i class="fas fa-users"></i> Users
+            </button>
+            <button class="ai-quick-action" data-cmd="Show active services">
+                <i class="fas fa-box"></i> Services
+            </button>
+            <button class="ai-quick-action" data-cmd="Show open tickets">
+                <i class="fas fa-headset"></i> Tickets
+            </button>
+            <button class="ai-quick-action" data-cmd="Check API balance">
+                <i class="fas fa-heartbeat"></i> API Health
+            </button>
+        </div>
+        
+        <!-- Input -->
+        <div class="ai-input-area">
+            <div class="ai-input-wrapper">
+                <textarea class="ai-input" id="aiInput" placeholder="Tell me what you want to do..." rows="1"></textarea>
+            </div>
+            <button class="ai-send-btn" id="aiSend">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Examples -->
+    <div class="ai-examples">
+        <h3><i class="fas fa-lightbulb"></i> Example Commands</h3>
+        <div class="ai-example-grid">
+            <div class="ai-example-card">
+                <h4><i class="fas fa-wallet"></i> Financial</h4>
+                <div class="ai-example-item" data-cmd="add 5000 naira to john">"add 5000 naira to john"</div>
+                <div class="ai-example-item" data-cmd="give mike $20">"give mike $20"</div>
+                <div class="ai-example-item" data-cmd="approve deposit 5">"approve deposit 5"</div>
+                <div class="ai-example-item" data-cmd="reject deposit 10">"reject deposit 10"</div>
+            </div>
+            <div class="ai-example-card">
+                <h4><i class="fas fa-tags"></i> Pricing</h4>
+                <div class="ai-example-item" data-cmd="set markup to 50">"set markup to 50%"</div>
+                <div class="ai-example-item" data-cmd="set price service 15 to 3.50">"set price service 15 to $3.50"</div>
+                <div class="ai-example-item" data-cmd="show instagram services">"show instagram services"</div>
+                <div class="ai-example-item" data-cmd="show api services">"show api services"</div>
+            </div>
+            <div class="ai-example-card">
+                <h4><i class="fas fa-users-cog"></i> Users</h4>
+                <div class="ai-example-item" data-cmd="show users">"show users"</div>
+                <div class="ai-example-item" data-cmd="ban user spammer">"ban user spammer"</div>
+                <div class="ai-example-item" data-cmd="unban mike">"unban mike"</div>
+                <div class="ai-example-item" data-cmd="refund order 42">"refund order 42"</div>
+            </div>
+            <div class="ai-example-card">
+                <h4><i class="fas fa-terminal"></i> System</h4>
+                <div class="ai-example-item" data-cmd="syncservices">"syncservices"</div>
+                <div class="ai-example-item" data-cmd="checkbalance">"checkbalance"</div>
+                <div class="ai-example-item" data-cmd="stats">"show stats"</div>
+                <div class="ai-example-item" data-cmd="show tickets">"show tickets"</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const chatMessages = document.getElementById('chatMessages');
+const aiInput = document.getElementById('aiInput');
+const aiSend = document.getElementById('aiSend');
+const quickActions = document.querySelectorAll('.ai-quick-action');
+const exampleItems = document.querySelectorAll('.ai-example-item');
+
+let isProcessing = false;
+
+// Quick actions
+quickActions.forEach(btn => {
+    btn.addEventListener('click', () => {
+        aiInput.value = btn.dataset.cmd;
+        sendMessage();
+    });
+});
+
+// Example items
+exampleItems.forEach(item => {
+    item.addEventListener('click', () => {
+        aiInput.value = item.dataset.cmd;
+        aiInput.focus();
+    });
+});
+
+// Auto-resize textarea
+aiInput.addEventListener('input', () => {
+    aiInput.style.height = 'auto';
+    aiInput.style.height = Math.min(aiInput.scrollHeight, 150) + 'px';
+});
+
+// Send on Enter (Shift+Enter for new line)
+aiInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+aiSend.addEventListener('click', sendMessage);
+
+function addMessage(type, content, isCode = false) {
+    const msg = document.createElement('div');
+    msg.className = `ai-message ${type}`;
+    
+    const avatar = type === 'assistant' ? '🤖' : '👤';
+    
+    let formattedContent = content;
+    if (isCode) {
+        formattedContent = `<pre>${escapeHtml(content)}</pre>`;
+    }
+    
+    msg.innerHTML = `
+        <div class="ai-message-avatar">${avatar}</div>
+        <div class="ai-message-content">${formattedContent}</div>
+    `;
+    
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addTypingIndicator() {
+    const typing = document.createElement('div');
+    typing.className = 'ai-message assistant';
+    typing.id = 'typingIndicator';
+    typing.innerHTML = `
+        <div class="ai-message-avatar">🤖</div>
+        <div class="ai-typing">
+            <div class="ai-typing-dot"></div>
+            <div class="ai-typing-dot"></div>
+            <div class="ai-typing-dot"></div>
+        </div>
+    `;
+    chatMessages.appendChild(typing);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const typing = document.getElementById('typingIndicator');
+    if (typing) typing.remove();
+}
+
+function sendMessage() {
+    const message = aiInput.value.trim();
+    if (!message || isProcessing) return;
+    
+    isProcessing = true;
+    aiSend.disabled = true;
+    
+    // Add user message
+    addMessage('user', escapeHtml(message));
+    aiInput.value = '';
+    aiInput.style.height = 'auto';
+    
+    // Show typing indicator
+    addTypingIndicator();
+    
+    fetch('{% url "admin_shell_execute" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+            command: message,
+            mode: 'quick'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        removeTypingIndicator();
+        
+        if (data.success) {
+            // Format output with colors
+            let output = data.output;
+            output = output.replace(/✅/g, '<span class="success">✅</span>');
+            output = output.replace(/❌/g, '<span class="error">❌</span>');
+            output = output.replace(/⚠️/g, '<span class="warning">⚠️</span>');
+            
+            // Check if it looks like code/data
+            if (output.includes('---') || output.includes('│') || output.includes('|')) {
+                addMessage('assistant', `<pre>${escapeHtml(data.output)}</pre>`);
+            } else {
+                addMessage('assistant', output.replace(/\n/g, '<br>'));
+            }
+        } else {
+            addMessage('assistant', `<span class="error">❌ Error: ${escapeHtml(data.error)}</span>`);
+        }
+    })
+    .catch(error => {
+        removeTypingIndicator();
+        addMessage('assistant', `<span class="error">❌ Request failed: ${error}</span>`);
+    })
+    .finally(() => {
+        isProcessing = false;
+        aiSend.disabled = false;
+        aiInput.focus();
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Focus input on load
+aiInput.focus();
+</script>
+{% endblock %}

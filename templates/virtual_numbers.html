@@ -1,0 +1,825 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Virtual Numbers - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="virtual-numbers-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="container">
+            <h1>📱 Virtual Numbers</h1>
+            <p>Get phone numbers for WhatsApp, Telegram, Google & more</p>
+        </div>
+    </div>
+
+    <div class="container">
+        {% if grizzly_balance is not None and grizzly_balance == 0 %}
+        <div class="alert alert-warning" style="margin-bottom: 20px;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>Admin Notice:</strong> GrizzlySMS balance is $0. Please fund the account to enable virtual number purchases.
+        </div>
+        {% endif %}
+        
+        <!-- Info Banner -->
+        <div class="info-banner">
+            <div class="banner-icon">
+                <i class="fas fa-shield-alt"></i>
+            </div>
+            <div class="banner-content">
+                <h3>How It Works</h3>
+                <p>1. Select platform & country → 2. Get virtual number → 3. Use for verification → 4. Receive SMS code</p>
+            </div>
+            <div class="banner-balance">
+                <span>Your Balance</span>
+                <strong>₦{{ wallet.balance_ngn|floatformat:0 }}</strong>
+            </div>
+        </div>
+
+        <div class="vn-grid">
+            <!-- Order Form -->
+            <div class="order-card">
+                <h2><i class="fas fa-plus-circle"></i> Get New Number</h2>
+                
+                <form method="POST" id="orderForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="order">
+                    
+                    <div class="form-group">
+                        <label>Select Platform</label>
+                        <div class="platform-grid">
+                            {% for svc in services %}
+                            <label class="platform-option">
+                                <input type="radio" name="service" value="{{ svc.code }}" {% if forloop.first %}checked{% endif %}>
+                                <span>
+                                    <span class="icon">{{ svc.icon }}</span>
+                                    <span class="name">{{ svc.name }}</span>
+                                </span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Select Country</label>
+                        <select name="country" class="form-control" id="countrySelect">
+                            {% for country in countries %}
+                            <option value="{{ country.code }}" data-flag="{{ country.flag }}">
+                                {{ country.flag }} {{ country.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="price-display" id="priceDisplay">
+                        <div class="price-row">
+                            <span>Price:</span>
+                            <span class="price" id="priceValue">
+                                <span class="loading-spinner"></span> Loading...
+                            </span>
+                        </div>
+                        <small id="priceNote">Prices vary by country & availability</small>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg btn-block" id="orderBtn">
+                        <i class="fas fa-phone-alt"></i> Get Number Now
+                    </button>
+                </form>
+            </div>
+
+            <!-- Active Numbers -->
+            <div class="active-numbers-card">
+                <h2><i class="fas fa-list"></i> Your Active Numbers</h2>
+                
+                {% if active_orders %}
+                <div class="numbers-list">
+                    {% for order in active_orders %}
+                    <div class="number-item status-{{ order.status }}" id="order-{{ order.id }}">
+                        <div class="number-header">
+                            <span class="service-badge">{{ order.get_service_display }}</span>
+                            <span class="status-badge {{ order.status }}" id="status-{{ order.id }}">{{ order.get_status_display }}</span>
+                        </div>
+                        
+                        <div class="number-body">
+                            <div class="phone-number">
+                                <i class="fas fa-phone"></i>
+                                <span>+{{ order.phone_number|default:"Generating..." }}</span>
+                                {% if order.phone_number %}
+                                <button onclick="copyToClipboard('+{{ order.phone_number }}')" class="copy-btn" title="Copy number">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="country-info">
+                                <span>{{ order.country }}</span>
+                                {% if order.expires_at %}
+                                <span class="expiry-timer" data-expires="{{ order.expires_at|date:'c' }}">
+                                    ⏳ <span class="countdown"></span>
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        {% if order.status == 'active' %}
+                        <div class="number-actions">
+                            <button type="button" class="btn btn-sm btn-primary check-sms-btn" 
+                                    data-order-id="{{ order.id }}" data-activation-id="{{ order.activation_id }}">
+                                <i class="fas fa-sync"></i> Check SMS
+                            </button>
+                            <button type="button" class="btn btn-sm btn-info resend-btn"
+                                    data-order-id="{{ order.id }}">
+                                <i class="fas fa-redo"></i> Resend
+                            </button>
+                            <form method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancel">
+                                <input type="hidden" name="order_id" value="{{ order.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline" onclick="return confirm('Cancel and get refund?')">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </form>
+                        </div>
+                        <div class="auto-check-notice">
+                            <i class="fas fa-info-circle"></i> Auto-checking every 10 seconds...
+                        </div>
+                        {% endif %}
+                        
+                        {% if order.status == 'received' %}
+                        <div class="number-actions">
+                            <form method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="complete">
+                                <input type="hidden" name="order_id" value="{{ order.id }}">
+                                <button type="submit" class="btn btn-sm btn-success">
+                                    <i class="fas fa-check"></i> Mark Complete
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="sms-code-container" id="sms-code-{{ order.id }}" {% if not order.sms_code %}style="display:none;"{% endif %}>
+                            <div class="sms-code">
+                                <span class="label">✅ SMS Code:</span>
+                                <span class="code" id="code-value-{{ order.id }}">{{ order.sms_code|default:"" }}</span>
+                                {% if order.sms_code %}
+                                <button onclick="copyToClipboard('{{ order.sms_code }}')" class="copy-btn">
+                                    <i class="fas fa-copy"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="number-footer">
+                            <span class="price">₦{{ order.price_ngn|floatformat:0 }}</span>
+                            <span class="time">{{ order.created_at|timesince }} ago</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-phone-slash"></i>
+                    <p>No active numbers</p>
+                    <small>Order a virtual number to get started</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Order History -->
+        <div class="history-section">
+            <h2><i class="fas fa-history"></i> Order History</h2>
+            {% if all_orders %}
+            <div class="history-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Service</th>
+                            <th>Country</th>
+                            <th>Number</th>
+                            <th>Code</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in all_orders %}
+                        <tr>
+                            <td>#{{ order.id }}</td>
+                            <td>{{ order.get_service_display }}</td>
+                            <td>{{ order.country }}</td>
+                            <td>{{ order.phone_number|default:"-" }}</td>
+                            <td>{{ order.sms_code|default:"-" }}</td>
+                            <td>₦{{ order.price_ngn|floatformat:0 }}</td>
+                            <td><span class="status-badge {{ order.status }}">{{ order.get_status_display }}</span></td>
+                            <td>{{ order.created_at|date:"M d, H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted text-center">No order history yet</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.virtual-numbers-page {
+    min-height: 100vh;
+    padding-bottom: 60px;
+}
+
+.info-banner {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+    border-radius: var(--border-radius);
+    padding: 25px 30px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    margin: -30px 0 30px;
+    position: relative;
+    z-index: 10;
+}
+
+.banner-icon {
+    width: 60px;
+    height: 60px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.banner-content {
+    flex: 1;
+}
+
+.banner-content h3 {
+    margin-bottom: 5px;
+}
+
+.banner-content p {
+    opacity: 0.9;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.banner-balance {
+    text-align: right;
+}
+
+.banner-balance span {
+    display: block;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+.banner-balance strong {
+    font-size: 1.5rem;
+}
+
+.vn-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.order-card, .active-numbers-card {
+    background: var(--secondary);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.order-card h2, .active-numbers-card h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    font-size: 1.2rem;
+}
+
+.order-card h2 i, .active-numbers-card h2 i {
+    color: var(--primary);
+}
+
+.platform-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.platform-option {
+    cursor: pointer;
+}
+
+.platform-option input {
+    display: none;
+}
+
+.platform-option span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 10px;
+    background: var(--dark);
+    border: 2px solid transparent;
+    border-radius: var(--border-radius-sm);
+    transition: all 0.3s;
+}
+
+.platform-option:hover span {
+    background: rgba(255, 107, 0, 0.05);
+}
+
+.platform-option input:checked + span {
+    border-color: var(--primary);
+    background: rgba(255, 107, 0, 0.1);
+}
+
+.platform-option .icon {
+    font-size: 1.5rem;
+    margin-bottom: 5px;
+}
+
+.platform-option .name {
+    font-size: 0.8rem;
+    color: var(--gray-400);
+}
+
+.price-display {
+    background: var(--dark);
+    padding: 15px;
+    border-radius: var(--border-radius-sm);
+    margin: 20px 0;
+}
+
+.price-display .price-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+}
+
+.price-display .price {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.price-display small {
+    color: var(--gray-600);
+}
+
+.loading-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 107, 0, 0.3);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Active Numbers */
+.numbers-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.number-item {
+    background: var(--dark);
+    border-radius: var(--border-radius-sm);
+    padding: 15px;
+    border-left: 4px solid var(--gray-500);
+}
+
+.number-item.status-active {
+    border-left-color: var(--primary);
+}
+
+.number-item.status-received, .number-item.status-completed {
+    border-left-color: var(--success);
+}
+
+.number-item.status-cancelled, .number-item.status-expired {
+    border-left-color: var(--danger);
+}
+
+.number-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.service-badge {
+    background: rgba(255, 107, 0, 0.2);
+    color: var(--primary);
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.status-badge {
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-badge.pending { background: rgba(255, 193, 7, 0.2); color: var(--warning); }
+.status-badge.active { background: rgba(0, 176, 255, 0.2); color: var(--info); }
+.status-badge.received, .status-badge.completed { background: rgba(0, 200, 83, 0.2); color: var(--success); }
+.status-badge.cancelled, .status-badge.expired { background: rgba(255, 23, 68, 0.2); color: var(--danger); }
+
+.phone-number {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.phone-number i {
+    color: var(--primary);
+}
+
+.copy-btn {
+    background: var(--primary);
+    border: none;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.copy-btn:hover {
+    background: var(--primary-dark);
+}
+
+.country-info {
+    color: var(--gray-500);
+    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.expiry-timer {
+    color: var(--warning);
+    font-size: 0.85rem;
+}
+
+.number-actions {
+    display: flex;
+    gap: 10px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+}
+
+.auto-check-notice {
+    font-size: 0.8rem;
+    color: var(--gray-500);
+    margin-top: 8px;
+}
+
+.auto-check-notice i {
+    color: var(--info);
+}
+
+.sms-code-container {
+    margin: 12px 0;
+}
+
+.sms-code {
+    background: rgba(0, 200, 83, 0.1);
+    border: 1px solid var(--success);
+    padding: 12px;
+    border-radius: var(--border-radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sms-code .label {
+    color: var(--success);
+}
+
+.sms-code .code {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--success);
+    letter-spacing: 3px;
+}
+
+.number-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    color: var(--gray-500);
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.number-footer .price {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+    color: var(--gray-500);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    opacity: 0.5;
+}
+
+/* History Table */
+.history-section {
+    background: var(--secondary);
+    border-radius: var(--border-radius);
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-section h2 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    font-size: 1.2rem;
+}
+
+.history-section h2 i {
+    color: var(--primary);
+}
+
+.history-table {
+    overflow-x: auto;
+}
+
+.history-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th, .history-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.history-table th {
+    color: var(--gray-500);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.btn-info {
+    background: var(--info);
+    color: white;
+}
+
+.btn-success {
+    background: var(--success);
+    color: white;
+}
+
+.btn-success:hover {
+    background: #00a854;
+}
+
+@media (max-width: 992px) {
+    .vn-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .info-banner {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .banner-balance {
+        text-align: center;
+    }
+    
+    .platform-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+</style>
+
+<script>
+const csrfToken = '{{ csrf_token }}';
+
+// Fetch real price when selection changes
+function fetchPrice() {
+    const service = document.querySelector('input[name="service"]:checked').value;
+    const country = document.getElementById('countrySelect').value;
+    const priceValue = document.getElementById('priceValue');
+    const orderBtn = document.getElementById('orderBtn');
+    
+    priceValue.innerHTML = '<span class="loading-spinner"></span> Loading...';
+    orderBtn.disabled = true;
+    
+    fetch('{% url "virtual_numbers" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `action=get_price&service=${service}&country=${country}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            priceValue.innerHTML = `₦${data.price_ngn.toLocaleString()} <small>($${data.price_usd.toFixed(2)})</small>`;
+            document.getElementById('priceNote').textContent = 'Price includes 100% service markup';
+        } else {
+            priceValue.innerHTML = '₦775 <small>(~$0.50)</small>';
+            document.getElementById('priceNote').textContent = 'Estimated price - actual may vary';
+        }
+        orderBtn.disabled = false;
+    })
+    .catch(err => {
+        priceValue.innerHTML = '₦775 <small>(~$0.50)</small>';
+        orderBtn.disabled = false;
+    });
+}
+
+// Check SMS status via AJAX
+function checkSMS(orderId) {
+    fetch('{% url "virtual_numbers" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `action=check_sms&order_id=${orderId}`
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success && data.code) {
+            // Show the SMS code
+            const codeContainer = document.getElementById(`sms-code-${orderId}`);
+            const codeValue = document.getElementById(`code-value-${orderId}`);
+            const statusBadge = document.getElementById(`status-${orderId}`);
+            
+            if (codeContainer && codeValue) {
+                codeValue.textContent = data.code;
+                codeContainer.style.display = 'block';
+                codeContainer.innerHTML = `
+                    <div class="sms-code">
+                        <span class="label">✅ SMS Code:</span>
+                        <span class="code">${data.code}</span>
+                        <button onclick="copyToClipboard('${data.code}')" class="copy-btn">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            
+            if (statusBadge) {
+                statusBadge.textContent = 'Received';
+                statusBadge.className = 'status-badge received';
+            }
+            
+            showNotification(`SMS received! Code: ${data.code}`, 'success');
+            
+            // Stop auto-checking for this order
+            stopAutoCheck(orderId);
+        } else if (data.status === 'waiting') {
+            showNotification('Waiting for SMS... Please verify the number.', 'info');
+        }
+    })
+    .catch(err => {
+        console.error('Check SMS error:', err);
+    });
+}
+
+// Resend SMS request
+function requestResend(orderId) {
+    fetch('{% url "virtual_numbers" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: `action=resend_sms&order_id=${orderId}`
+    })
+    .then(() => {
+        showNotification('Requested another SMS. Please wait...', 'info');
+    });
+}
+
+// Auto-check intervals
+const autoCheckIntervals = {};
+
+function startAutoCheck(orderId) {
+    if (!autoCheckIntervals[orderId]) {
+        autoCheckIntervals[orderId] = setInterval(() => {
+            checkSMS(orderId);
+        }, 10000); // Check every 10 seconds
+    }
+}
+
+function stopAutoCheck(orderId) {
+    if (autoCheckIntervals[orderId]) {
+        clearInterval(autoCheckIntervals[orderId]);
+        delete autoCheckIntervals[orderId];
+    }
+}
+
+// Countdown timer for expiry
+function updateCountdowns() {
+    document.querySelectorAll('.expiry-timer').forEach(el => {
+        const expiresAt = new Date(el.dataset.expires);
+        const now = new Date();
+        const diff = expiresAt - now;
+        
+        if (diff > 0) {
+            const mins = Math.floor(diff / 60000);
+            const secs = Math.floor((diff % 60000) / 1000);
+            el.querySelector('.countdown').textContent = `${mins}:${secs.toString().padStart(2, '0')} remaining`;
+        } else {
+            el.querySelector('.countdown').textContent = 'Expired';
+            el.style.color = 'var(--danger)';
+        }
+    });
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(function() {
+        showNotification('Copied to clipboard!', 'success');
+    });
+}
+
+function showNotification(message, type) {
+    const container = document.querySelector('.messages-container') || createMessagesContainer();
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type}`;
+    alert.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()">&times;</button>`;
+    container.appendChild(alert);
+    setTimeout(() => alert.remove(), 4000);
+}
+
+function createMessagesContainer() {
+    const container = document.createElement('div');
+    container.className = 'messages-container';
+    document.body.appendChild(container);
+    return container;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch initial price
+    fetchPrice();
+    
+    // Add event listeners for price updates
+    document.querySelectorAll('input[name="service"]').forEach(input => {
+        input.addEventListener('change', fetchPrice);
+    });
+    document.getElementById('countrySelect').addEventListener('change', fetchPrice);
+    
+    // Add check SMS button handlers
+    document.querySelectorAll('.check-sms-btn').forEach(btn => {
+        const orderId = btn.dataset.orderId;
+        btn.addEventListener('click', () => checkSMS(orderId));
+        // Start auto-checking for active orders
+        startAutoCheck(orderId);
+    });
+    
+    // Add resend button handlers
+    document.querySelectorAll('.resend-btn').forEach(btn => {
+        btn.addEventListener('click', () => requestResend(btn.dataset.orderId));
+    });
+    
+    // Update countdowns every second
+    updateCountdowns();
+    setInterval(updateCountdowns, 1000);
+});
+</script>
+{% endblock %}

@@ -1,0 +1,441 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Register - DAILYFUNDZBOOST{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-container">
+        <div class="auth-image">
+            <img src="https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&q=80" alt="Social Media Growth">
+            <div class="auth-image-overlay">
+                <h2>Join 50,000+ Users</h2>
+                <p>Create an account and start boosting your social media today!</p>
+                <div class="benefits-list">
+                    <div class="benefit"><i class="fas fa-check-circle"></i> Free to join</div>
+                    <div class="benefit"><i class="fas fa-check-circle"></i> Instant account setup</div>
+                    <div class="benefit"><i class="fas fa-check-circle"></i> 24/7 support</div>
+                    <div class="benefit"><i class="fas fa-check-circle"></i> Best prices in Nigeria</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="auth-form-container">
+            <div class="auth-header">
+                <a href="{% url 'home' %}" class="auth-logo">
+                    <img src="{% static 'images/logo.png' %}" alt="DAILYFUNDZBOOST" class="auth-logo-img">
+                </a>
+                <h1>Create Account</h1>
+                <p>Fill in your details to get started</p>
+            </div>
+            
+            {% if messages %}
+            <div class="auth-messages">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% if form.errors %}
+            <div class="auth-messages">
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                    <div class="alert alert-danger">
+                        {{ error }}
+                    </div>
+                    {% endfor %}
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <form method="POST" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Username</label>
+                    <input type="text" name="username" class="form-control" placeholder="Choose a username" required value="{{ form.username.value|default:'' }}">
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" name="email" class="form-control" placeholder="Enter your email" required value="{{ form.email.value|default:'' }}">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Password</label>
+                        <input type="password" name="password1" class="form-control" placeholder="Create password" required minlength="8">
+                    </div>
+                    <div class="form-group">
+                        <label><i class="fas fa-lock"></i> Confirm Password</label>
+                        <input type="password" name="password2" class="form-control" placeholder="Confirm password" required minlength="8">
+                    </div>
+                </div>
+                
+                <div class="form-group terms">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="terms" required>
+                        <span>I agree to the <a href="javascript:void(0)" onclick="showTerms()">Terms of Service</a> and <a href="javascript:void(0)" onclick="showPrivacy()">Privacy Policy</a></span>
+                    </label>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lg btn-block">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>Already have an account? <a href="{% url 'login' %}">Sign in</a></p>
+            </div>
+            
+            <div class="auth-support">
+                <p>Need help? <a href="https://wa.me/2348105594678" target="_blank"><i class="fab fa-whatsapp"></i> Chat on WhatsApp</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: linear-gradient(135deg, var(--gray-100), var(--light));
+}
+
+.auth-container {
+    display: flex;
+    max-width: 1000px;
+    width: 100%;
+    background: var(--light);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--gray-200);
+}
+
+.auth-image {
+    flex: 1;
+    position: relative;
+    min-height: 600px;
+    display: none;
+}
+
+.auth-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.auth-image-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(15, 23, 42, 0.9));
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px;
+    color: var(--light);
+}
+
+.auth-image-overlay h2 {
+    font-size: 2.5rem;
+    margin-bottom: 15px;
+}
+
+.auth-image-overlay p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin-bottom: 30px;
+}
+
+.benefits-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.benefit {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1rem;
+}
+
+.benefit i {
+    color: var(--success);
+}
+
+.auth-form-container {
+    flex: 1;
+    padding: 50px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: var(--light);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.auth-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 30px;
+}
+
+.auth-logo-img {
+    height: 60px;
+    width: auto;
+    object-fit: contain;
+}
+
+.auth-logo .logo-icon {
+    font-size: 2rem;
+}
+
+.auth-logo .logo-text {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.auth-header h1 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+    color: var(--dark);
+}
+
+.auth-header p {
+    color: var(--gray-600);
+}
+
+.auth-messages {
+    margin-bottom: 20px;
+}
+
+.auth-messages .alert {
+    padding: 12px 15px;
+    border-radius: var(--border-radius-sm);
+    margin-bottom: 10px;
+}
+
+.auth-form .form-group {
+    margin-bottom: 20px;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--gray-700);
+    font-size: 0.9rem;
+}
+
+.auth-form label i {
+    margin-right: 8px;
+    color: var(--primary);
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.terms {
+    margin-top: 10px;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: var(--gray-600);
+}
+
+.checkbox-label input {
+    accent-color: var(--primary);
+    margin-top: 3px;
+}
+
+.checkbox-label a {
+    color: var(--primary);
+}
+
+.checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+.auth-footer {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--gray-200);
+}
+
+.auth-footer p {
+    color: var(--gray-600);
+}
+
+.auth-footer a {
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+.auth-support {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.auth-support p {
+    color: var(--gray-600);
+    font-size: 0.9rem;
+}
+
+.auth-support a {
+    color: #25d366;
+}
+
+.auth-support a:hover {
+    text-decoration: underline;
+}
+
+@media (min-width: 768px) {
+    .auth-image {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .auth-form-container {
+        padding: 30px 20px;
+    }
+}
+
+/* Modal Styles */
+.policy-modal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    overflow-y: auto;
+}
+
+.policy-modal-content {
+    background: var(--secondary);
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: var(--border-radius);
+    width: 90%;
+    max-width: 700px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.policy-modal h2 {
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.policy-modal p, .policy-modal li {
+    color: var(--gray-300);
+    line-height: 1.8;
+    margin-bottom: 10px;
+}
+
+.policy-modal .close-btn {
+    float: right;
+    font-size: 28px;
+    cursor: pointer;
+    color: var(--gray-400);
+}
+
+.policy-modal .close-btn:hover {
+    color: var(--primary);
+}
+</style>
+
+<!-- Terms of Service Modal -->
+<div id="termsModal" class="policy-modal">
+    <div class="policy-modal-content">
+        <span class="close-btn" onclick="closeModal('termsModal')">&times;</span>
+        <h2>Terms of Service</h2>
+        <p><strong>Last Updated:</strong> January 2024</p>
+        <p>Welcome to DAILYFUNDZBOOST. By using our services, you agree to the following terms:</p>
+        <ul>
+            <li>You must be at least 18 years old to use our services.</li>
+            <li>You are responsible for maintaining the security of your account.</li>
+            <li>All funds added to your wallet are non-refundable except where required by law.</li>
+            <li>We reserve the right to suspend accounts that violate our policies.</li>
+            <li>Service delivery times are estimates and not guaranteed.</li>
+            <li>We are not responsible for third-party platform policies affecting service delivery.</li>
+        </ul>
+        <p>For questions, contact support via WhatsApp: +234 810 559 4678</p>
+    </div>
+</div>
+
+<!-- Privacy Policy Modal -->
+<div id="privacyModal" class="policy-modal">
+    <div class="policy-modal-content">
+        <span class="close-btn" onclick="closeModal('privacyModal')">&times;</span>
+        <h2>Privacy Policy</h2>
+        <p><strong>Last Updated:</strong> January 2024</p>
+        <p>DAILYFUNDZBOOST is committed to protecting your privacy:</p>
+        <ul>
+            <li>We collect only necessary information: name, email, and transaction data.</li>
+            <li>Your data is securely stored and never sold to third parties.</li>
+            <li>We use encryption to protect sensitive information.</li>
+            <li>You may request deletion of your data by contacting support.</li>
+            <li>We may use cookies to improve your experience.</li>
+        </ul>
+        <p>For privacy inquiries, email: support@dailyfundzboost.trade</p>
+    </div>
+</div>
+
+<script>
+function showTerms() {
+    document.getElementById('termsModal').style.display = 'block';
+}
+
+function showPrivacy() {
+    document.getElementById('privacyModal').style.display = 'block';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    if (event.target.classList.contains('policy-modal')) {
+        event.target.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}
